@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Powerline</string>
+    <string name="title_activity_main_menu">MainMenu</string>
+    <string name="tab_text_1">Chats</string>
+    <string name="tab_text_2">Contacts</string>
+    <string name="title_activity_messages_menu">Messages</string>
+</resources>
