@@ -2,6 +2,7 @@ package com.comfy.powerline;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -110,7 +111,7 @@ String token = "";
         tv.setText(version);
     }
 
-    private void switchView() {
+    private void openSuccessfulLogin() {
         EditText emailInput = findViewById(R.id.emailInput);
         Intent intent = new Intent(MainActivity.this, MessagesMenu.class);
         intent.putExtra("user", String.valueOf(emailInput.getText()));
@@ -127,8 +128,12 @@ String token = "";
         run.start();
         run.join();
         tv.setText(token);
-        //if (!Objects.equals(token, "Invalid login")){
-            switchView();
-        //}
+        if (!Objects.equals(token, "Invalid login")){
+            openSuccessfulLogin();
+        }
+    }
+    public void createAccount(View view) {
+        Intent intent = new Intent(MainActivity.this, CreateAccountActivity.class);
+        startActivity(intent);
     }
 }
