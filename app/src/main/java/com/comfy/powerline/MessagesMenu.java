@@ -1,5 +1,6 @@
 package com.comfy.powerline;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -49,5 +50,9 @@ String user;
             user = extras.getString("user");
         }
         return user;
+    }
+
+    protected String getToken() {
+        return getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
     }
 }

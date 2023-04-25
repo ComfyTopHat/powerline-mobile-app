@@ -1,7 +1,14 @@
 <resources>
     <string name="app_name">Powerline</string>
+    <string name="base_url">https://powerline.azurewebsites.net/</string>
     <string name="title_activity_main_menu">MainMenu</string>
     <string name="tab_text_1">Chats</string>
     <string name="tab_text_2">Contacts</string>
     <string name="title_activity_messages_menu">Messages</string>
+    <string name="create_an_account">Create an Account</string>
+    <string name="password">Password:</string>
+    <string name="confirm_password">Confirm Password:</string>
+    <string name="generate_username">Generate Username</string>
+    <string name="submit">Submit</string>
+    <string name="back">Back</string>
 </resources>

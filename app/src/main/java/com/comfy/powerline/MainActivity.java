@@ -2,9 +2,13 @@ package com.comfy.powerline;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.util.Log;
@@ -33,6 +37,7 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 public class MainActivity extends AppCompatActivity {
+
 String baseUrl = "https://powerline.azurewebsites.net/";
 String version = "";
 String token = "";
@@ -47,7 +52,7 @@ String token = "";
             throw new RuntimeException(e);
         }
     }
-
+// TO-DO add shared preferences listener
     private Thread getHTTPThread() {
         Runnable httpThread = () -> {
             try {
@@ -63,7 +68,7 @@ String token = "";
                 }
                 is.close();
                 JSONObject result = new JSONObject(responseStrBuilder.toString());
-                version = ("Powerline Version: " +  (String) result.get("Powerline Version"));
+                version = ("Powerline Version: " + result.get("Powerline Version"));
             } catch (IOException | JSONException e) {
                 throw new RuntimeException(e);
             }
@@ -93,7 +98,7 @@ String token = "";
                 }
                 is.close();
                 JSONObject result = new JSONObject(responseStrBuilder.toString());
-                token = ("Token: " +  (String) result.get("token"));
+                token = ((String) result.get("token"));
                 con.disconnect();
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -112,14 +117,36 @@ String token = "";
     }
 
     private void openSuccessfulLogin() {
-        EditText emailInput = findViewById(R.id.emailInput);
         Intent intent = new Intent(MainActivity.this, MessagesMenu.class);
-        intent.putExtra("user", String.valueOf(emailInput.getText()));
+        String jwt = getFromSharedPreferences();
+        intent.putExtra("jwt", jwt);
         startActivity(intent);
     }
 
+    private void decodeToken(String jwt) {
+        String[] chunks = token.split("\\.");
+        Base64.Decoder decoder = null;
+        if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            decoder = Base64.getUrlDecoder();
+            String header = new String(decoder.decode(chunks[0]));
+            String payload = new String(decoder.decode(chunks[1]));
+        }
+    }
+
+    @SuppressLint("CommitPrefEdits")
+    private void addToSharedPreferences(String token) {
+        SharedPreferences.Editor editor = getSharedPreferences("AUTH", MODE_PRIVATE).edit();
+        editor.putString("jwt", token);
+        editor.apply();
+    }
+
+    private String getFromSharedPreferences() {
+        SharedPreferences prefs = getSharedPreferences("AUTH", MODE_PRIVATE);
+        String jwt = prefs.getString("jwt", "-");
+        return jwt;
+    }
+
     public void getToken(View v) throws InterruptedException {
-        TextView tv = findViewById(R.id.VersionNumber);
         EditText emailInput = findViewById(R.id.emailInput);
         EditText passwordInput = findViewById(R.id.passwordInput);
         Editable username = emailInput.getText();
@@ -127,8 +154,8 @@ String token = "";
         Thread run = getPOSTHTTPThread(username, password);
         run.start();
         run.join();
-        tv.setText(token);
         if (!Objects.equals(token, "Invalid login")){
+            addToSharedPreferences(token);
             openSuccessfulLogin();
         }
     }
