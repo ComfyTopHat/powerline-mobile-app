@@ -2,14 +2,17 @@ package com.comfy.powerline;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
 
 import com.github.javafaker.Faker;
+import com.comfy.powerline.utils.Auth;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,17 +77,47 @@ public class CreateAccountActivity extends AppCompatActivity {
         return new Thread(httpThread);
     }
 
+    private void displayInvalidPWAlert(Context context) {
+        new AlertDialog.Builder(context)
+                .setTitle("Invalid Password")
+                .setMessage("Password must contain:\n1. A lowercase letter\n2. An uppercase letter\n3. A number\n4. At least 7 characters")
+                .setNegativeButton("Okay", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
+
+    private void displaySuccessMessage(Context context, String username, String passLastDigs) {
+        new AlertDialog.Builder(context)
+                .setTitle("Account Created")
+                .setMessage("Please note details as accounts CANNOT be recovered: \nUsername: " + username +"\nPassword: ******" + passLastDigs)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(CreateAccountActivity.this, MainActivity.class);
+                        startActivity(intent);
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .show();
+    }
+
     public void submitNewUser(View v) throws InterruptedException {
-        EditText userNameWidget = findViewById(R.id.usernameInput);
-        Editable username = userNameWidget.getText();
-        EditText emailWidget = findViewById(R.id.emailInput);
-       // Editable email = emailWidget.getText();
         EditText passwordWidget = findViewById(R.id.inputPassword);
         Editable password = passwordWidget.getText();
+        String passwordStr = passwordWidget.getText().toString().trim();
         EditText passwordConfirmWidget = findViewById(R.id.inputConfirmPassword);
-        Editable passwordConfirm = passwordConfirmWidget.getText();
-        Thread run = getPOSTHTTPThread(username, password);
-        run.start();
-        run.join();
+        String passwordConfirm = passwordConfirmWidget.getText().toString().trim();
+        if (Auth.isValid(passwordStr) && passwordStr.equals(passwordConfirm) && (passwordStr.length() > 6)) {
+            EditText userNameWidget = findViewById(R.id.usernameInput);
+            Editable username = userNameWidget.getText();
+            EditText emailWidget = findViewById(R.id.emailInput);
+            // Editable email = emailWidget.getText();
+            Thread run = getPOSTHTTPThread(username, password);
+            run.start();
+            run.join();
+            this.displaySuccessMessage(CreateAccountActivity.this, String.valueOf(username), passwordStr.substring(passwordStr.length()-3));
+        }
+        else {
+            this.displayInvalidPWAlert(CreateAccountActivity.this);
+        }
     }
 }
