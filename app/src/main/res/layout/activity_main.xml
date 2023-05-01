@@ -84,4 +84,17 @@
         app:layout_constraintTop_toBottomOf="@+id/LoginButton"
         app:layout_constraintVertical_bias="0.0" />
 
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Preferences"
+        app:icon="@android:drawable/ic_menu_preferences"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.508"
+        app:layout_constraintStart_toEndOf="@+id/VersionNumber"
+        app:layout_constraintTop_toBottomOf="@+id/CreateAccountButton"
+        app:layout_constraintVertical_bias="0.951" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

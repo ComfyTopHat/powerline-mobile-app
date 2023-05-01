@@ -3,22 +3,14 @@ package com.comfy.powerline;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
-import android.util.Log;
-import android.util.LogPrinter;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,16 +21,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
-import java.util.logging.Logger;
+
 
 public class MainActivity extends AppCompatActivity {
 
-String baseUrl = "https://powerline.azurewebsites.net/";
 String version = "";
 String token = "";
 
@@ -53,7 +43,7 @@ String token = "";
         }
     }
 // TO-DO add shared preferences listener
-    private Thread getHTTPThread() {
+    private Thread getVersionThread() {
         Runnable httpThread = () -> {
             try {
                 URL url = new URL(baseUrl);
@@ -110,7 +100,7 @@ String token = "";
     }
     private void getPowerlineVer() throws InterruptedException {
         TextView tv = findViewById(R.id.VersionNumber);
-        Thread run = getHTTPThread();
+        Thread run = getVersionThread();
         run.start();
         run.join();
         tv.setText(version);
@@ -119,7 +109,10 @@ String token = "";
     private void openSuccessfulLogin() {
         Intent intent = new Intent(MainActivity.this, MessagesMenu.class);
         String jwt = getFromSharedPreferences();
+        EditText tv = findViewById(R.id.emailInput);
+        Editable user = tv.getText();
         intent.putExtra("jwt", jwt);
+        intent.putExtra("user", user);
         startActivity(intent);
     }
 
@@ -134,16 +127,15 @@ String token = "";
     }
 
     @SuppressLint("CommitPrefEdits")
-    private void addToSharedPreferences(String token) {
+    private void addToSharedPreferences(String name, String value) {
         SharedPreferences.Editor editor = getSharedPreferences("AUTH", MODE_PRIVATE).edit();
-        editor.putString("jwt", token);
+        editor.putString(name, value);
         editor.apply();
     }
 
     private String getFromSharedPreferences() {
         SharedPreferences prefs = getSharedPreferences("AUTH", MODE_PRIVATE);
-        String jwt = prefs.getString("jwt", "-");
-        return jwt;
+        return prefs.getString("jwt", "-");
     }
 
     public void getToken(View v) throws InterruptedException {
@@ -155,7 +147,8 @@ String token = "";
         run.start();
         run.join();
         if (!Objects.equals(token, "Invalid login")){
-            addToSharedPreferences(token);
+            addToSharedPreferences("jwt",token);
+            addToSharedPreferences("user", String.valueOf(username));
             openSuccessfulLogin();
         }
     }
@@ -163,4 +156,6 @@ String token = "";
         Intent intent = new Intent(MainActivity.this, CreateAccountActivity.class);
         startActivity(intent);
     }
+
+    static String baseUrl = "https://powerline.azurewebsites.net/";
 }
