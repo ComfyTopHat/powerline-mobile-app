@@ -4,13 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_alignWithParentIfMissing="false"
+    android:layout_alignParentTop="false"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".ViewMessage"
-    tools:showIn="@layout/activity_new_message">
+    tools:showIn="@layout/activity_view_message">
 
     <TextView
-        android:layout_width="wrap_content"
         android:id="@+id/directMessageText"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
         android:text="" />

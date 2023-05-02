@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
-    <color name="pl_yellow">#BFBE45</color>
+    <color name="pl_primary">#BFBE45</color>
+    <color name="pl_primary_variant">#BFBE45</color>
+    <color name="pl_secondary">#BFBE45</color>
+    <color name="pl_secondary_variant">#BFBE45</color>
+    <color name="pl_background">#BFBE45</color>
+    <color name="pl_surface">#BFBE45</color>
+    <color name="pl_error">#BFBE45</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="pl_black">#101010</color>
 </resources>

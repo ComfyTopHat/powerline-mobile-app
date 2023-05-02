@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/fab_margin"
-        android:onClick="switchToNewMessage"
+        android:onClick="sendMessage"
         android:layout_marginBottom="16dp"
         android:src="@android:drawable/ic_input_add"
         android:contentDescription="TODO" />

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".ViewMessage"
-    tools:showIn="@layout/activity_new_message">
+    tools:showIn="@layout/activity_view_message">
 
     <TextView
         android:layout_width="wrap_content"

@@ -10,39 +10,47 @@ import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import android.view.View;
 import android.widget.TextView;
 
-import com.comfy.powerline.databinding.ActivityNewMessageBinding;
+import com.comfy.powerline.databinding.ActivityViewMessageBinding;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ViewMessage extends AppCompatActivity {
-
-    private ActivityNewMessageBinding binding;
+JSONObject jsonMessage = new JSONObject();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityNewMessageBinding.inflate(getLayoutInflater());
+        ActivityViewMessageBinding binding = ActivityViewMessageBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        Toolbar toolbar = binding.toolbar;
-        setSupportActionBar(toolbar);
-        CollapsingToolbarLayout toolBarLayout = binding.toolbarLayout;
-        toolBarLayout.setTitle(getTitle());
-        TextView tv = findViewById(R.id.directMessageText);
-        tv.setText(getFromSharedPreferences());
         FloatingActionButton fab = binding.fab;
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        try {
+            getJSONFromExtras();
+            setTextFields(binding);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        fab.setOnClickListener(view -> Snackbar.make(view, "Reply function in progress", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show());
     }
 
+    private void setTextFields(ActivityViewMessageBinding binding) throws JSONException {
+        CollapsingToolbarLayout toolBarLayout = binding.toolbarLayout;
+        toolBarLayout.setTitle(jsonMessage.getString("senderName"));
+        Toolbar toolbar = binding.toolbar;
+        setSupportActionBar(toolbar);
+        TextView tv = findViewById(R.id.directMessageText);
+        String dateTime = jsonMessage.getString("sentDateTime").split(".", 1)[0];
+        tv.setText(dateTime.substring(0, dateTime.length()-8));
+        tv.append(System.getProperty("line.separator"));
+        tv.append(jsonMessage.getString("text"));
 
-    private String getFromSharedPreferences() {
+    }
+
+    private void getJSONFromExtras() throws JSONException {
         SharedPreferences prefs = getSharedPreferences("AUTH", MODE_PRIVATE);
-        return prefs.getString("json", "-");
+        jsonMessage = new JSONObject(prefs.getString("json", "-"));
     }
 }

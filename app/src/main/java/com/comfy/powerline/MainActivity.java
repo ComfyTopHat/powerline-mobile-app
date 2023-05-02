@@ -114,16 +114,7 @@ String token = "";
         intent.putExtra("jwt", jwt);
         intent.putExtra("user", user);
         startActivity(intent);
-    }
-
-    private void decodeToken(String jwt) {
-        String[] chunks = token.split("\\.");
-        Base64.Decoder decoder = null;
-        if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            decoder = Base64.getUrlDecoder();
-            String header = new String(decoder.decode(chunks[0]));
-            String payload = new String(decoder.decode(chunks[1]));
-        }
+        finish();
     }
 
     @SuppressLint("CommitPrefEdits")

@@ -45,7 +45,12 @@ public class MessagesMenu extends AppCompatActivity {
 
     private void openMessage(JSONObject jsonMessage) {
         Intent intent = new Intent(MessagesMenu.this, ViewMessage.class);
-        addToSharedPreferences("json", jsonMessage.toString());
+        addToSharedPreferences("json", String.valueOf(jsonMessage));
+        startActivity(intent);
+    }
+
+    public void sendMessage(View v) {
+        Intent intent = new Intent(MessagesMenu.this, sendMessage_v1.class);
         startActivity(intent);
     }
 
@@ -55,6 +60,7 @@ public class MessagesMenu extends AppCompatActivity {
         editor.putString(name, value);
         editor.apply();
     }
+
     private TextView getMessageTV(JSONObject jsonMessage) throws JSONException {
         TextView tv = new TextView(this);
         String row = (jsonMessage.getString("sentDateTime") + ": " + jsonMessage.getString("text"));
