@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.Layout;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,9 +18,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDate;
 
 public class MessagesMenu extends AppCompatActivity {
     String baseUrl = MainActivity.baseUrl;
@@ -45,7 +44,7 @@ public class MessagesMenu extends AppCompatActivity {
 
     private void openMessage(JSONObject jsonMessage) {
         Intent intent = new Intent(MessagesMenu.this, ViewMessage.class);
-        addToSharedPreferences("json", String.valueOf(jsonMessage));
+        addToSharedPreferences(String.valueOf(jsonMessage));
         startActivity(intent);
     }
 
@@ -55,16 +54,26 @@ public class MessagesMenu extends AppCompatActivity {
     }
 
     @SuppressLint("CommitPrefEdits")
-    private void addToSharedPreferences(String name, String value) {
+    private void addToSharedPreferences(String value) {
         SharedPreferences.Editor editor = getSharedPreferences("AUTH", MODE_PRIVATE).edit();
-        editor.putString(name, value);
+        editor.putString("json", value);
         editor.apply();
+    }
+
+    private LocalDate getDate(String longDateTime) {
+        String date = longDateTime.split("T")[0];
+        LocalDate dateTime = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            dateTime = LocalDate.parse(date);
+        }
+        return dateTime;
     }
 
     private TextView getMessageTV(JSONObject jsonMessage) throws JSONException {
         TextView tv = new TextView(this);
-        String row = (jsonMessage.getString("sentDateTime") + ": " + jsonMessage.getString("text"));
+        String row = (jsonMessage.getString("sender") + ": " + jsonMessage.getString("text"));
         tv.setText(row);
+        tv.setTextSize(25);
         View.OnClickListener oc = view -> openMessage(jsonMessage);
         tv.setOnClickListener(oc);
         return tv;
@@ -72,7 +81,7 @@ public class MessagesMenu extends AppCompatActivity {
 
 
     /**
-     * Takes a String username
+     * POTENTIALLY REDUNDANT? Re-visit this
      * @return an Int clientID
      */
     protected String getUser() {
@@ -93,49 +102,33 @@ public class MessagesMenu extends AppCompatActivity {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     private Thread getMessages() {
         Runnable httpThread = () -> {
             try {
-                JSONArray jsonResponse = new JSONArray();
-                JSONObject jsonMessage = new JSONObject();
-                String token = getToken();
+                String token = "Bearer " + getToken();
                 String user = getUser();
-                URL url = new URL(baseUrl + "clients/messages/");
+                URL url = new URL(baseUrl + "contacts/get/thread/{recipient_id}?recipientID=" + user);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
-                con.setDoOutput(true);
-                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestMethod("GET");
                 con.setRequestProperty("Accept", "application/json");
-                con.setRequestProperty("Authorization", "Bearer " + token);
-                String payload = "{\"clientID\" : "+ user + "}";
-                // Send the payload
-                try (OutputStream os = con.getOutputStream()) {
-                    byte[] input = payload.getBytes("utf-8");
-                    os.write(input, 0, input.length);
+                con.setRequestProperty("Authorization", token);
+                InputStream is = con.getInputStream();
+                BufferedReader bR = new BufferedReader( new InputStreamReader(is));
+                String line;
+                StringBuilder responseStrBuilder = new StringBuilder();
+                while((line =  bR.readLine()) != null){
+                    responseStrBuilder.append(line);
                 }
-                try(BufferedReader br = new BufferedReader(
-                        new InputStreamReader(con.getInputStream(), "utf-8"))) {
-                    StringBuilder response = new StringBuilder();
-                    String responseLine = null;
-                    while ((responseLine = br.readLine()) != null) {
-                        response.append(responseLine.trim());
-                        jsonResponse = new JSONArray(response.toString());
-                    }
-                } catch (JSONException e) {
-                    throw new RuntimeException(e);
-                }
-                con.disconnect();
+                is.close();
+                JSONArray result = new JSONArray(responseStrBuilder.toString());
                 LinearLayout ll = findViewById(R.id.linear_layout);
-                for (int i =0; i < jsonResponse.length(); i++) {
-                    jsonMessage = (JSONObject) jsonResponse.get(i);
+                for (int i=0; i< result.length(); i++) {
+                    JSONObject jsonMessage = (JSONObject) result.opt(i);
                     TextView tv = getMessageTV(jsonMessage);
                     ll.addView(tv);
-
                 }
-
             } catch (IOException | JSONException e) {
                 throw new RuntimeException(e);
             }

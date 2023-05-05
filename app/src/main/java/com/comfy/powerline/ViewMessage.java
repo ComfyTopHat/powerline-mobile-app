@@ -38,11 +38,11 @@ JSONObject jsonMessage = new JSONObject();
 
     private void setTextFields(ActivityViewMessageBinding binding) throws JSONException {
         CollapsingToolbarLayout toolBarLayout = binding.toolbarLayout;
-        toolBarLayout.setTitle(jsonMessage.getString("senderName"));
+        toolBarLayout.setTitle(jsonMessage.getString("sender"));
         Toolbar toolbar = binding.toolbar;
         setSupportActionBar(toolbar);
         TextView tv = findViewById(R.id.directMessageText);
-        String dateTime = jsonMessage.getString("sentDateTime").split(".", 1)[0];
+        String dateTime = jsonMessage.getString("timestamp").split("\\.", 1)[0];
         tv.setText(dateTime.substring(0, dateTime.length()-8));
         tv.append(System.getProperty("line.separator"));
         tv.append(jsonMessage.getString("text"));
