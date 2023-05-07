@@ -5,10 +5,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.comfy.powerline.utils.MessageDataList;
+import com.comfy.powerline.utils.RecyclerViewListAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -69,14 +72,21 @@ public class MessagesMenu extends AppCompatActivity {
         return dateTime;
     }
 
-    private TextView getMessageTV(JSONObject jsonMessage) throws JSONException {
-        TextView tv = new TextView(this);
-        String row = (jsonMessage.getString("sender") + ": " + jsonMessage.getString("text"));
-        tv.setText(row);
-        tv.setTextSize(25);
-        View.OnClickListener oc = view -> openMessage(jsonMessage);
-        tv.setOnClickListener(oc);
-        return tv;
+    private void setRecyclerView(JSONArray ja) throws JSONException {
+        MessageDataList[] newList = new MessageDataList[ja.length()];
+        RecyclerView rv = findViewById(R.id.message_recycler_view);
+        LinearLayoutManager manager = new LinearLayoutManager(this);
+        manager.setOrientation(LinearLayoutManager.VERTICAL);
+        rv.setLayoutManager(manager);
+        for (int i=0; i< ja.length(); i++) {
+            JSONObject jsonMessage = (JSONObject) ja.opt(i);
+            MessageDataList convoThread =  new MessageDataList(jsonMessage.getString("sender"), android.R.drawable.ic_dialog_info, "01-01-2020");
+            newList[i] = convoThread;
+        }
+        RecyclerViewListAdapter adapter = new RecyclerViewListAdapter(newList);
+        rv.setHasFixedSize(true);
+        rv.setLayoutManager(new LinearLayoutManager(this));
+        rv.setAdapter(adapter);
     }
 
 
@@ -123,12 +133,7 @@ public class MessagesMenu extends AppCompatActivity {
                 }
                 is.close();
                 JSONArray result = new JSONArray(responseStrBuilder.toString());
-                LinearLayout ll = findViewById(R.id.linear_layout);
-                for (int i=0; i< result.length(); i++) {
-                    JSONObject jsonMessage = (JSONObject) result.opt(i);
-                    TextView tv = getMessageTV(jsonMessage);
-                    ll.addView(tv);
-                }
+                setRecyclerView(result);
             } catch (IOException | JSONException e) {
                 throw new RuntimeException(e);
             }
