@@ -89,7 +89,7 @@ public class CreateAccountActivity extends AppCompatActivity {
     private void displaySuccessMessage(Context context, String username, String passLastDigs) {
         new AlertDialog.Builder(context)
                 .setTitle("Account Created")
-                .setMessage("Please note details as accounts CANNOT be recovered: \nUsername: " + username +"\nPassword: ******" + passLastDigs)
+                .setMessage("Please note account details: \nUsername: " + username +"\nPassword: ******" + passLastDigs)
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         Intent intent = new Intent(CreateAccountActivity.this, MainActivity.class);

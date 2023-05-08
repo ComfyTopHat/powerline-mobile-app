@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -42,7 +43,7 @@ String token = "";
             throw new RuntimeException(e);
         }
     }
-// TO-DO add shared preferences listener
+
     private Thread getVersionThread() {
         Runnable httpThread = () -> {
             try {
@@ -130,6 +131,12 @@ String token = "";
     }
 
     public void getToken(View v) throws InterruptedException {
+        try {
+            InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
         EditText emailInput = findViewById(R.id.emailInput);
         EditText passwordInput = findViewById(R.id.passwordInput);
         Editable username = emailInput.getText();
@@ -141,6 +148,10 @@ String token = "";
             addToSharedPreferences("jwt",token);
             addToSharedPreferences("user", String.valueOf(username));
             openSuccessfulLogin();
+        }
+        else {
+            TextView tv = findViewById(R.id.invalidInput);
+            tv.setVisibility(View.VISIBLE);
         }
     }
     public void createAccount(View view) {
