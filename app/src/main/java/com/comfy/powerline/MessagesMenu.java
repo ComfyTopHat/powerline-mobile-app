@@ -47,29 +47,21 @@ public class MessagesMenu extends AppCompatActivity {
 
     private void openMessage(JSONObject jsonMessage) {
         Intent intent = new Intent(MessagesMenu.this, ViewMessage.class);
-        addToSharedPreferences(String.valueOf(jsonMessage));
+        addToSharedPreferences("json", String.valueOf(jsonMessage));
         startActivity(intent);
     }
 
     public void sendMessage(View v) {
-        Intent intent = new Intent(MessagesMenu.this, sendMessage_v1.class);
+        Intent intent = new Intent(MessagesMenu.this, Contacts.class);
+        intent.putExtra("url", baseUrl);
         startActivity(intent);
     }
 
     @SuppressLint("CommitPrefEdits")
-    private void addToSharedPreferences(String value) {
+    private void addToSharedPreferences(String key, String value) {
         SharedPreferences.Editor editor = getSharedPreferences("AUTH", MODE_PRIVATE).edit();
-        editor.putString("json", value);
+        editor.putString(key, value);
         editor.apply();
-    }
-
-    private LocalDate getDate(String longDateTime) {
-        String date = longDateTime.split("T")[0];
-        LocalDate dateTime = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            dateTime = LocalDate.parse(date);
-        }
-        return dateTime;
     }
 
     private void setRecyclerView(JSONArray ja) throws JSONException {

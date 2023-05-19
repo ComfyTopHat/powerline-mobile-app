@@ -16,6 +16,14 @@
         android:theme="@style/Theme.Powerline"
         tools:targetApi="29">
         <activity
+            android:name=".MessageThread"
+            android:exported="false" />
+        <activity
+            android:name=".Contacts"
+            android:exported="false"
+            android:label="@string/title_activity_contacts"
+            android:theme="@style/Theme.Powerline.NoActionBar" />
+        <activity
             android:name=".sendMessage_v1"
             android:exported="false" />
         <activity
@@ -41,6 +49,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

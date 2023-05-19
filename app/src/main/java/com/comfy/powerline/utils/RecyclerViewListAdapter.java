@@ -1,5 +1,6 @@
 package com.comfy.powerline.utils;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,9 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.comfy.powerline.MainActivity;
+import com.comfy.powerline.MessageThread;
+import com.comfy.powerline.MessagesMenu;
 import com.comfy.powerline.R;
 
 import org.w3c.dom.Text;
@@ -38,7 +42,9 @@ public class RecyclerViewListAdapter extends RecyclerView.Adapter<RecyclerViewLi
         holder.relativeLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(view.getContext(),"TO-DO Open message thread: "+myListData.getDescription(),Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(view.getContext(), MessageThread.class);
+                intent.putExtra("contact", myListData.getDescription());
+                view.getContext().startActivity(intent);
             }
         });
     }

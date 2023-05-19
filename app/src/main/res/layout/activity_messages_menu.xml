@@ -7,14 +7,17 @@
     tools:context=".MessagesMenu">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/Theme.Powerline.AppBarOverlay"/>
+        android:theme="@style/Theme.Powerline.AppBarOverlay" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/new_message_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:backgroundTint="@color/pl_primary"
+        android:foregroundTint="@color/pl_black"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/fab_margin"
         android:onClick="sendMessage"
@@ -23,10 +26,16 @@
         android:contentDescription="TODO" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:layout_width="match_parent"
-        android:layout_gravity="bottom|end"
         android:id="@+id/message_recycler_view"
-        android:layout_height="match_parent" />
+        android:layout_width="match_parent"
+        android:layout_height="840dp"
+        android:layout_gravity="bottom|end" />
+
+    <SearchView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        app:layout_anchor="@+id/appBarLayout"
+        app:layout_anchorGravity="top|center" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

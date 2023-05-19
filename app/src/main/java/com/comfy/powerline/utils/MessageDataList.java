@@ -9,6 +9,11 @@ public class MessageDataList{
         this.date = date;
         this.imgId = imgId;
     }
+
+    public MessageDataList(String description, int imgId) {
+        this.description = description;
+        this.imgId = imgId;
+    }
     public String getDescription() {
         return description;
     }

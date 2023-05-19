@@ -37,16 +37,7 @@
         android:layout_height="41dp"
         android:onClick="getToken"
         android:text="Login"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/passwordInput" />
-
-    <Button
-        android:id="@+id/loginButton"
-        android:layout_width="213dp"
-        android:layout_height="41dp"
-        android:onClick="getToken"
-        android:text="Login"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/passwordInput" />
@@ -75,6 +66,7 @@
     <Button
         android:id="@+id/CreateAccountButton"
         android:layout_width="213dp"
+        android:textColor="@color/white"
         android:layout_height="wrap_content"
         android:text="Create a New Account"
         android:onClick="createAccount"
@@ -87,6 +79,7 @@
     <Button
         android:id="@+id/button"
         android:layout_width="wrap_content"
+        android:textColor="@color/white"
         android:layout_height="wrap_content"
         android:text="Preferences"
         app:icon="@android:drawable/ic_menu_preferences"

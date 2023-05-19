@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.View;
@@ -24,12 +23,12 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Objects;
 
 
 public class MainActivity extends AppCompatActivity {
-
+ApiHandler api = new ApiHandler();
+int clientID = 0;
 String version = "";
 String token = "";
 
@@ -42,29 +41,6 @@ String token = "";
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private Thread getVersionThread() {
-        Runnable httpThread = () -> {
-            try {
-                URL url = new URL(baseUrl);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("GET");
-                InputStream is = con.getInputStream();
-                BufferedReader bR = new BufferedReader( new InputStreamReader(is));
-                String line;
-                StringBuilder responseStrBuilder = new StringBuilder();
-                while((line =  bR.readLine()) != null){
-                    responseStrBuilder.append(line);
-                }
-                is.close();
-                JSONObject result = new JSONObject(responseStrBuilder.toString());
-                version = ("Powerline Version: " + result.get("Powerline Version"));
-            } catch (IOException | JSONException e) {
-                throw new RuntimeException(e);
-            }
-        };
-        return new Thread(httpThread);
     }
 
     private Thread getPOSTHTTPThread(Editable username, Editable password) {
@@ -90,6 +66,7 @@ String token = "";
                 is.close();
                 JSONObject result = new JSONObject(responseStrBuilder.toString());
                 token = ((String) result.get("token"));
+                clientID = (int) result.get("clientID");
                 con.disconnect();
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -101,17 +78,17 @@ String token = "";
     }
     private void getPowerlineVer() throws InterruptedException {
         TextView tv = findViewById(R.id.VersionNumber);
-        Thread run = getVersionThread();
-        run.start();
-        run.join();
+        api.setVersion();
+        version = api.version;
         tv.setText(version);
     }
 
     private void openSuccessfulLogin() {
         Intent intent = new Intent(MainActivity.this, MessagesMenu.class);
-        String jwt = getFromSharedPreferences();
+        String jwt = getFromSharedPreferences("jwt");
         EditText tv = findViewById(R.id.emailInput);
         Editable user = tv.getText();
+        addToSharedPreferences("clientID", String.valueOf(clientID));
         intent.putExtra("jwt", jwt);
         intent.putExtra("user", user);
         startActivity(intent);
@@ -119,15 +96,15 @@ String token = "";
     }
 
     @SuppressLint("CommitPrefEdits")
-    private void addToSharedPreferences(String name, String value) {
+    protected void addToSharedPreferences(String name, String value) {
         SharedPreferences.Editor editor = getSharedPreferences("AUTH", MODE_PRIVATE).edit();
         editor.putString(name, value);
         editor.apply();
     }
 
-    private String getFromSharedPreferences() {
+    private String getFromSharedPreferences(String key) {
         SharedPreferences prefs = getSharedPreferences("AUTH", MODE_PRIVATE);
-        return prefs.getString("jwt", "-");
+        return prefs.getString(key, "-");
     }
 
     public void getToken(View v) throws InterruptedException {
