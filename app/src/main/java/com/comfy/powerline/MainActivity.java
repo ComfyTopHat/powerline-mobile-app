@@ -69,6 +69,9 @@ String token = "";
                 clientID = (int) result.get("clientID");
                 con.disconnect();
             } catch (IOException e) {
+                TextView tv = findViewById(R.id.invalidInput);
+                tv.setText("Error communicating with server, please try again later");
+                tv.setVisibility(View.VISIBLE);
                 throw new RuntimeException(e);
             } catch (JSONException e) {
                 token = "Invalid login";
@@ -76,6 +79,7 @@ String token = "";
         };
         return new Thread(httpThread);
     }
+
     private void getPowerlineVer() throws InterruptedException {
         TextView tv = findViewById(R.id.VersionNumber);
         api.setVersion();
@@ -131,6 +135,16 @@ String token = "";
             tv.setVisibility(View.VISIBLE);
         }
     }
+
+    protected String getToken() {
+        return "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
+    }
+
+
+    protected String getClientID() {
+        return getSharedPreferences("AUTH", MODE_PRIVATE).getString("clientID", "-");
+    }
+
     public void createAccount(View view) {
         Intent intent = new Intent(MainActivity.this, CreateAccountActivity.class);
         startActivity(intent);

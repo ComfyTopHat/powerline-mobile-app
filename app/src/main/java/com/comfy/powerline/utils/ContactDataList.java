@@ -1,20 +1,16 @@
 package com.comfy.powerline.utils;
 
-public class MessageDataList {
+public class ContactDataList {
     private String description;
     private String date;
-    private String senderID;
-    private String message;
     private int imgId;
-    public MessageDataList(String description, String message, int imgId, String date, String senderID) {
+    public ContactDataList(String description, int imgId, String date) {
         this.description = description;
         this.date = date;
-        this.message = message;
         this.imgId = imgId;
-        this.senderID = senderID;
     }
 
-    public MessageDataList(String description, int imgId) {
+    public ContactDataList(String description, int imgId) {
         this.description = description;
         this.imgId = imgId;
     }
@@ -32,11 +28,7 @@ public class MessageDataList {
     }
 
     public String getDate() { return date; }
-
-    public String getSenderID() { return senderID; }
     public void setDate(String date) {
         this.date = date;
     }
-
-    public String getMessage() {return message; }
 }

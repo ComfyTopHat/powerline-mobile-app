@@ -1,10 +1,10 @@
 package com.comfy.powerline;
 
-import android.annotation.SuppressLint;
-import android.content.SharedPreferences;
+import static com.comfy.powerline.MainActivity.baseUrl;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.comfy.powerline.utils.ContactDataList;
 import com.comfy.powerline.utils.MessageDataList;
 
 import org.json.JSONArray;
@@ -15,17 +15,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class ApiHandler extends AppCompatActivity  {
-    MessageDataList[] contacts;
+    ContactDataList[] contactResponse;
+    MessageDataList[] messageResponse;
     String version;
-    public MessageDataList[] getContacts(String clientID, String baseURL, String jwt) throws InterruptedException {
+    ContactDataList[] getContacts(String clientID, String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
                 try {
-                    URL url = new URL(baseURL + "contacts/get/{recipient_id}?recipientID=" + clientID);
+                    URL url = new URL(baseUrl + "contacts/get/{recipient_id}?recipientID=" + clientID);
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.setRequestMethod("GET");
                     con.setRequestProperty("Authorization", jwt);
@@ -37,7 +40,7 @@ public class ApiHandler extends AppCompatActivity  {
                         responseStrBuilder.append(line);
                     }
                     JSONArray result = new JSONArray(responseStrBuilder.toString());
-                    contacts = jsonArrayToStringArray(result);
+                    contactResponse = jsonArrayToContactDataList(result);
                     is.close();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -48,21 +51,66 @@ public class ApiHandler extends AppCompatActivity  {
         });
         thread.start();
         thread.join();
-        return contacts;
+        return contactResponse;
+    }
+
+
+     MessageDataList[] getLatestMessageThreads(String clientID, String jwt) throws InterruptedException {
+         Thread thread = new Thread(() -> {
+            try {
+                URL url = new URL(baseUrl + "contacts/get/thread/{recipient_id}?recipientID=" + clientID);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("GET");
+                con.setRequestProperty("Accept", "application/json");
+                con.setRequestProperty("Authorization", jwt);
+                InputStream is = con.getInputStream();
+                BufferedReader bR = new BufferedReader( new InputStreamReader(is));
+                String line;
+                StringBuilder responseStrBuilder = new StringBuilder();
+                while((line =  bR.readLine()) != null){
+                    responseStrBuilder.append(line);
+                }
+                is.close();
+                JSONArray result = new JSONArray(responseStrBuilder.toString());
+                messageResponse = jsonArraytoMessageThreadDataList(result);
+            } catch (IOException | JSONException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        thread.start();
+        thread.join();
+        return messageResponse;
     }
     
-    private MessageDataList[] jsonArrayToStringArray(JSONArray ja) throws JSONException {
+    private MessageDataList[] jsonArraytoMessageThreadDataList(JSONArray ja) throws JSONException {
         MessageDataList[] dataList = new MessageDataList[ja.length()];
         for (int i =0; i < ja.length(); i++) {
-            dataList[i] = new MessageDataList(ja.getString(i), android.R.drawable.ic_dialog_info);
+            String date = ja.getJSONObject(i).getString("timestamp");
+            String sender = ja.getJSONObject(i).getString("senderName");
+            String text = ja.getJSONObject(i).getString("text");
+            String senderID = ja.getJSONObject(i).getString("senderID");
+            date = date.substring(0, (date.length() - 10));
+            dataList[i] = new MessageDataList(sender, text, android.R.drawable.ic_dialog_info, date, senderID);
         }
         return dataList;
+    }
+
+
+    private ContactDataList[] jsonArrayToContactDataList(JSONArray ja) throws JSONException {
+        ContactDataList[] dataList = new ContactDataList[ja.length()];
+        for (int i = 0; i < ja.length(); i++) {
+            dataList[i] = new ContactDataList(ja.getString(i), android.R.drawable.ic_dialog_info);
+        }
+        return dataList;
+    }
+    protected String getToken() {
+        return "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
     }
 
     protected void setVersion() throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
-                URL url = new URL(MainActivity.baseUrl);
+                URL url = new URL(baseUrl);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setRequestMethod("GET");
                 InputStream is = con.getInputStream();
@@ -76,10 +124,53 @@ public class ApiHandler extends AppCompatActivity  {
                 JSONObject result = new JSONObject(responseStrBuilder.toString());
                 version = ("Powerline Version: " + result.get("Powerline Version"));
             } catch (IOException | JSONException e) {
-                throw new RuntimeException(e);
+                version = ("Error with API connection");
+                //throw new RuntimeException(e);
             }
         });
         thread.start();
         thread.join();
     }
+
+    MessageDataList[] getThreadMessages(String clientID, String filterID, String jwt) throws InterruptedException {
+        Thread thread = new Thread(() -> {
+            try {
+                String payload = "";
+                if (filterID.equals("NONE")) {
+                    payload = "{\"clientID\":\"" + clientID + "\"}";
+                }
+                else {
+                    payload = "{\"clientID\":\"" + clientID + "\",\"filterID\":\"" + filterID + "\"}";
+                }
+                URL url = new URL(baseUrl + "clients/messages/");
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("POST");
+                con.setDoOutput(true);
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("Accept", "application/json");
+                con.setRequestProperty("Authorization", jwt);
+                byte[] out = payload.getBytes(StandardCharsets.UTF_8);
+                OutputStream stream = con.getOutputStream();
+                stream.write(out);
+                InputStream is = con.getInputStream();
+                BufferedReader bR = new BufferedReader( new InputStreamReader(is));
+                String line;
+                StringBuilder responseStrBuilder = new StringBuilder();
+                while((line =  bR.readLine()) != null){
+                    responseStrBuilder.append(line);
+                }
+                is.close();
+                JSONArray result = new JSONArray(responseStrBuilder.toString());
+                messageResponse = jsonArraytoMessageThreadDataList(result);
+                con.disconnect();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (JSONException ignored) {
+            }
+        });
+        thread.start();
+        thread.join();
+        return messageResponse;
+    }
+
 }

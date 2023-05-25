@@ -7,22 +7,17 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.comfy.powerline.MainActivity;
 import com.comfy.powerline.MessageThread;
-import com.comfy.powerline.MessagesMenu;
 import com.comfy.powerline.R;
 
-import org.w3c.dom.Text;
 
-
-public class RecyclerViewListAdapter extends RecyclerView.Adapter<RecyclerViewListAdapter.ViewHolder>{
+public class MessagesRecyclerListAdapter extends RecyclerView.Adapter<MessagesRecyclerListAdapter.ViewHolder>{
     private MessageDataList[] listdata;
 
-    public RecyclerViewListAdapter(MessageDataList[] listdata) {
+    public MessagesRecyclerListAdapter(MessageDataList[] listdata) {
         this.listdata = listdata;
     }
     @Override
@@ -38,11 +33,16 @@ public class RecyclerViewListAdapter extends RecyclerView.Adapter<RecyclerViewLi
         final MessageDataList myListData = listdata[position];
         holder.textView.setText(listdata[position].getDescription());
         holder.dateView.setText(listdata[position].getDate());
+        holder.messageView.setText(listdata[position].getMessage());
         holder.imageView.setImageResource(listdata[position].getImgId());
+
+
         holder.relativeLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), MessageThread.class);
+                String senderID = myListData.getSenderID();
+                intent.putExtra("senderID", myListData.getSenderID());
                 intent.putExtra("contact", myListData.getDescription());
                 view.getContext().startActivity(intent);
             }
@@ -59,9 +59,11 @@ public class RecyclerViewListAdapter extends RecyclerView.Adapter<RecyclerViewLi
         public ImageView imageView;
         public TextView textView;
         public TextView dateView;
+        public TextView messageView;
         public RelativeLayout relativeLayout;
         public ViewHolder(View itemView) {
             super(itemView);
+            this.messageView = (TextView) itemView.findViewById(R.id.message_preview_view);
             this.dateView = (TextView) itemView.findViewById(R.id.dateView);
             this.imageView = (ImageView) itemView.findViewById(R.id.imageView);
             this.textView = (TextView) itemView.findViewById(R.id.textView);
