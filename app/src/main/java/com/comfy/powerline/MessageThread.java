@@ -5,32 +5,53 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.comfy.powerline.utils.MessageDataList;
 import com.comfy.powerline.utils.MessagesRecyclerListAdapter;
 
+import org.json.JSONException;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+
 public class MessageThread extends AppCompatActivity {
     MessageDataList[] messageThread;
+    String clientID;
+    String senderID;
+    ApiHandler api = new ApiHandler();
+    String jwt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message_thread);
         TextView tv = findViewById(R.id.contactName);
+        jwt = "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
         String contactName = getIntent().getStringExtra("contact");
-        String clientID = getSharedPreferences("AUTH", MODE_PRIVATE).getString("clientID", "-");
-        String senderID = getIntent().getStringExtra("senderID");
+        clientID = getSharedPreferences("AUTH", MODE_PRIVATE).getString("clientID", "-");
+        senderID = getIntent().getStringExtra("senderID");
         deleteSharedPreferences("contact");
+        deleteSharedPreferences("senderID");
         tv.setText(contactName);
-        String jwt = "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
         try {
-            ApiHandler api = new ApiHandler();
-            // TO-DO: Need to get the clientID of the sender here
             messageThread = api.getThreadMessages(clientID, senderID, jwt);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+       setRecyclerView();
+    }
+
+    public void sendMessage(View v) throws JSONException, IOException, InterruptedException {
+        EditText et = findViewById(R.id.messageInput);
+        String messageText = String.valueOf(et.getText());
+        api.sendMessage(jwt, clientID, senderID, messageText);
+    }
+
+    private RecyclerView setRecyclerView() {
         RecyclerView rv = findViewById(R.id.message_thread_recycler);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -39,5 +60,6 @@ public class MessageThread extends AppCompatActivity {
         rv.setHasFixedSize(true);
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(adapter);
+        return rv;
     }
     }

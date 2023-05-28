@@ -17,6 +17,7 @@
         tools:targetApi="29">
         <activity
             android:name=".MessageThread"
+            android:windowSoftInputMode="stateVisible|adjustResize"
             android:exported="false" />
         <activity
             android:name=".Contacts"

@@ -17,11 +17,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
 
 public class ApiHandler extends AppCompatActivity  {
     ContactDataList[] contactResponse;
+    JSONArray response;
     MessageDataList[] messageResponse;
     String version;
     ContactDataList[] getContacts(String clientID, String jwt) throws InterruptedException {
@@ -103,9 +107,6 @@ public class ApiHandler extends AppCompatActivity  {
         }
         return dataList;
     }
-    protected String getToken() {
-        return "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
-    }
 
     protected void setVersion() throws InterruptedException {
         Thread thread = new Thread(() -> {
@@ -125,11 +126,52 @@ public class ApiHandler extends AppCompatActivity  {
                 version = ("Powerline Version: " + result.get("Powerline Version"));
             } catch (IOException | JSONException e) {
                 version = ("Error with API connection");
-                //throw new RuntimeException(e);
             }
         });
         thread.start();
         thread.join();
+    }
+
+    HttpURLConnection getPOSTHTTPConnection(String func, String jwt) throws IOException {
+        URL url = new URL(baseUrl + func);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setDoOutput(true);
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Accept", "application/json");
+        con.setRequestProperty("Authorization", jwt);
+        return con;
+    }
+
+    public void sendMessage(String jwt, String senderID, String recipientID, String text) {
+        String payload = ("{\"senderID\":\"" + senderID + "\",\"recipientID\":\"" + recipientID + "\",\"text\":\"" + text + "\"}");
+        Thread thread = new Thread(() -> {
+            try {
+                URL url = new URL(baseUrl + "clients/messages/send");
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("POST");
+                con.setDoOutput(true);
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("Accept", "application/json");
+                con.setRequestProperty("Authorization", jwt);
+                byte[] out = payload.getBytes(StandardCharsets.UTF_8);
+                OutputStream stream = con.getOutputStream();
+                stream.write(out);
+                int status = con.getResponseCode();
+                InputStream is = con.getInputStream();
+                BufferedReader bR = new BufferedReader(new InputStreamReader(is));
+                String line;
+                StringBuilder responseStrBuilder = new StringBuilder();
+                while ((line = bR.readLine()) != null) {
+                    responseStrBuilder.append(line);
+                }
+                is.close();
+                con.disconnect();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        thread.start();
     }
 
     MessageDataList[] getThreadMessages(String clientID, String filterID, String jwt) throws InterruptedException {
@@ -142,13 +184,7 @@ public class ApiHandler extends AppCompatActivity  {
                 else {
                     payload = "{\"clientID\":\"" + clientID + "\",\"filterID\":\"" + filterID + "\"}";
                 }
-                URL url = new URL(baseUrl + "clients/messages/");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
-                con.setDoOutput(true);
-                con.setRequestProperty("Content-Type", "application/json");
-                con.setRequestProperty("Accept", "application/json");
-                con.setRequestProperty("Authorization", jwt);
+                HttpURLConnection con = getPOSTHTTPConnection("clients/messages/", jwt);
                 byte[] out = payload.getBytes(StandardCharsets.UTF_8);
                 OutputStream stream = con.getOutputStream();
                 stream.write(out);

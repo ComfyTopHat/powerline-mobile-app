@@ -136,10 +136,6 @@ String token = "";
         }
     }
 
-    protected String getToken() {
-        return "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
-    }
-
 
     protected String getClientID() {
         return getSharedPreferences("AUTH", MODE_PRIVATE).getString("clientID", "-");
