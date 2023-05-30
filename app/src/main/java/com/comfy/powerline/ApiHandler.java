@@ -76,7 +76,7 @@ public class ApiHandler extends AppCompatActivity  {
                 }
                 is.close();
                 JSONArray result = new JSONArray(responseStrBuilder.toString());
-                messageResponse = jsonArraytoMessageThreadDataList(result);
+                messageResponse = jsonArraytoMessageThreadDataList(result, clientID);
             } catch (IOException | JSONException e) {
                 throw new RuntimeException(e);
             }
@@ -86,15 +86,23 @@ public class ApiHandler extends AppCompatActivity  {
         return messageResponse;
     }
     
-    private MessageDataList[] jsonArraytoMessageThreadDataList(JSONArray ja) throws JSONException {
+    private MessageDataList[] jsonArraytoMessageThreadDataList(JSONArray ja, String clientID) throws JSONException {
         MessageDataList[] dataList = new MessageDataList[ja.length()];
+        boolean selfAuthored;
         for (int i =0; i < ja.length(); i++) {
             String date = ja.getJSONObject(i).getString("timestamp");
             String sender = ja.getJSONObject(i).getString("senderName");
             String text = ja.getJSONObject(i).getString("text");
             String senderID = ja.getJSONObject(i).getString("senderID");
+
             date = date.substring(0, (date.length() - 10));
-            dataList[i] = new MessageDataList(sender, text, android.R.drawable.ic_dialog_info, date, senderID);
+            if (senderID.equals(clientID)) {
+                selfAuthored = true;
+            }
+            else {
+                selfAuthored = false;
+            }
+            dataList[i] = new MessageDataList(sender, text, android.R.drawable.ic_dialog_info, date, senderID, selfAuthored);
         }
         return dataList;
     }
@@ -147,17 +155,10 @@ public class ApiHandler extends AppCompatActivity  {
         String payload = ("{\"senderID\":\"" + senderID + "\",\"recipientID\":\"" + recipientID + "\",\"text\":\"" + text + "\"}");
         Thread thread = new Thread(() -> {
             try {
-                URL url = new URL(baseUrl + "clients/messages/send");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
-                con.setDoOutput(true);
-                con.setRequestProperty("Content-Type", "application/json");
-                con.setRequestProperty("Accept", "application/json");
-                con.setRequestProperty("Authorization", jwt);
+                HttpURLConnection con = getPOSTHTTPConnection("clients/messages/send", jwt);
                 byte[] out = payload.getBytes(StandardCharsets.UTF_8);
                 OutputStream stream = con.getOutputStream();
                 stream.write(out);
-                int status = con.getResponseCode();
                 InputStream is = con.getInputStream();
                 BufferedReader bR = new BufferedReader(new InputStreamReader(is));
                 String line;
@@ -177,7 +178,7 @@ public class ApiHandler extends AppCompatActivity  {
     MessageDataList[] getThreadMessages(String clientID, String filterID, String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
-                String payload = "";
+                String payload;
                 if (filterID.equals("NONE")) {
                     payload = "{\"clientID\":\"" + clientID + "\"}";
                 }
@@ -197,7 +198,7 @@ public class ApiHandler extends AppCompatActivity  {
                 }
                 is.close();
                 JSONArray result = new JSONArray(responseStrBuilder.toString());
-                messageResponse = jsonArraytoMessageThreadDataList(result);
+                messageResponse = jsonArraytoMessageThreadDataList(result, clientID);
                 con.disconnect();
             } catch (IOException e) {
                 throw new RuntimeException(e);

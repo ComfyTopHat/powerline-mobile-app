@@ -23,7 +23,7 @@ public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecy
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-        View listItem= layoutInflater.inflate(R.layout.list_item, parent, false);
+        View listItem= layoutInflater.inflate(R.layout.message_list_item, parent, false);
         return new ViewHolder(listItem);
     }
 
@@ -56,9 +56,9 @@ public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecy
         public RelativeLayout relativeLayout;
         public ViewHolder(View itemView) {
             super(itemView);
-            this.dateView = (TextView) itemView.findViewById(R.id.dateView);
-            this.imageView = (ImageView) itemView.findViewById(R.id.imageView);
-            this.textView = (TextView) itemView.findViewById(R.id.textView);
+            this.dateView = (TextView) itemView.findViewById(R.id.left_message);
+            this.imageView = (ImageView) itemView.findViewById(R.id.left_message_image);
+            this.textView = (TextView) itemView.findViewById(R.id.left_author);
             relativeLayout = (RelativeLayout)itemView.findViewById(R.id.relativeLayout);
         }
     }

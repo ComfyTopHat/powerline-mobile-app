@@ -36,7 +36,7 @@ public class CreateAccountActivity extends AppCompatActivity {
         setContentView(R.layout.activity_create_account);
     }
     public void generateUsername(View v) {
-        // TO-DO: Update this method to its own thread
+        // TODO: Update this method to its own thread
         Faker faker = new Faker();
         String user = faker.superhero().prefix()+faker.name().firstName()+faker.address().buildingNumber();
         EditText et = findViewById(R.id.usernameInput);
@@ -70,7 +70,7 @@ public class CreateAccountActivity extends AppCompatActivity {
                 }
                 is.close();
                 JSONObject result = new JSONObject(responseStrBuilder.toString());
-                //  token = ("Token: " +  (String) result.get("token"));
+                // TODO: Add error handling for failed acc creation
                 con.disconnect();
             } catch (IOException | JSONException e) {
             }

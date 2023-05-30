@@ -5,7 +5,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
-import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -16,7 +15,6 @@ import com.comfy.powerline.utils.MessagesRecyclerListAdapter;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 
 public class MessageThread extends AppCompatActivity {
     MessageDataList[] messageThread;
@@ -45,13 +43,15 @@ public class MessageThread extends AppCompatActivity {
        setRecyclerView();
     }
 
-    public void sendMessage(View v) throws JSONException, IOException, InterruptedException {
+    public void sendMessage(View v) throws InterruptedException {
         EditText et = findViewById(R.id.messageInput);
         String messageText = String.valueOf(et.getText());
         api.sendMessage(jwt, clientID, senderID, messageText);
+        messageThread = api.getThreadMessages(clientID, senderID, jwt);
+        setRecyclerView();
     }
 
-    private RecyclerView setRecyclerView() {
+    private void setRecyclerView() {
         RecyclerView rv = findViewById(R.id.message_thread_recycler);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -60,6 +60,5 @@ public class MessageThread extends AppCompatActivity {
         rv.setHasFixedSize(true);
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(adapter);
-        return rv;
     }
     }

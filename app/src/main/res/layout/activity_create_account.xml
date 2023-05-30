@@ -8,7 +8,7 @@
     tools:context=".CreateAccountActivity">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/left_author"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/create_an_account"
@@ -131,7 +131,7 @@
         android:onClick="generateUsername"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/left_author" />
 
     <Button
         android:id="@+id/submitButton"

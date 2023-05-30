@@ -1,28 +1,35 @@
 package com.comfy.powerline.utils;
 
 public class MessageDataList {
-    private String description;
+    private String author;
+    private Boolean selfAuthored;
     private String date;
     private String senderID;
     private String message;
     private int imgId;
-    public MessageDataList(String description, String message, int imgId, String date, String senderID) {
-        this.description = description;
+    public MessageDataList(String description, String message, int imgId, String date, String senderID, Boolean selfAuthored) {
+        this.author = description;
         this.date = date;
         this.message = message;
-        this.imgId = imgId;
+        if (selfAuthored) {
+            this.imgId = 0;
+        }
+        else {
+            this.imgId = imgId;
+        }
         this.senderID = senderID;
+        this.selfAuthored = selfAuthored;
     }
 
     public MessageDataList(String description, int imgId) {
-        this.description = description;
+        this.author = description;
         this.imgId = imgId;
     }
-    public String getDescription() {
-        return description;
+    public String getAuthor() {
+        return author;
     }
-    public void setDescription(String description) {
-        this.description = description;
+    public void setAuthor(String author) {
+        this.author = author;
     }
     public int getImgId() {
         return imgId;
@@ -32,6 +39,11 @@ public class MessageDataList {
     }
 
     public String getDate() { return date; }
+    public Boolean getSelfAuthored() { return selfAuthored; }
+
+    public void setSelfAuthored(Boolean selfAuthored) {
+        this.selfAuthored = selfAuthored;
+    }
 
     public String getSenderID() { return senderID; }
     public void setDate(String date) {

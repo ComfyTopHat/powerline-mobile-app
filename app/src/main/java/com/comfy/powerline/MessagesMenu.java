@@ -56,13 +56,6 @@ public class MessagesMenu extends AppCompatActivity {
         startActivity(intent);
     }
 
-    @SuppressLint("CommitPrefEdits")
-    private void addToSharedPreferences(String key, String value) {
-        SharedPreferences.Editor editor = getSharedPreferences("AUTH", MODE_PRIVATE).edit();
-        editor.putString(key, value);
-        editor.apply();
-    }
-
     private void setRecyclerView(MessageDataList[] mdl) throws JSONException {
         RecyclerView rv = findViewById(R.id.message_recycler_view);
         LinearLayoutManager manager = new LinearLayoutManager(this);
@@ -72,30 +65,5 @@ public class MessagesMenu extends AppCompatActivity {
         rv.setHasFixedSize(true);
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(adapter);
-    }
-
-
-    /**
-     * POTENTIALLY REDUNDANT? Re-visit this
-     * @return an Int clientID
-     */
-    protected String getUser() {
-        try {
-            String username = getSharedPreferences("AUTH", MODE_PRIVATE).getString("user", "-");
-            URL url = new URL(baseUrl + "clients/get/clientID/" + username);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            InputStream is = con.getInputStream();
-            BufferedReader bR = new BufferedReader( new InputStreamReader(is));
-            String line;
-            StringBuilder responseStrBuilder = new StringBuilder();
-            while((line =  bR.readLine()) != null){
-                responseStrBuilder.append(line);
-            }
-            is.close();
-            return responseStrBuilder.toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

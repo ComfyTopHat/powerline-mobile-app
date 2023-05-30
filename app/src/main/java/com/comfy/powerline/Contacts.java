@@ -15,12 +15,11 @@ import com.comfy.powerline.databinding.ActivityContactsBinding;
 
 public class Contacts extends AppCompatActivity {
 ContactDataList[] contacts;
-    private ActivityContactsBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityContactsBinding.inflate(getLayoutInflater());
+        com.comfy.powerline.databinding.ActivityContactsBinding binding = ActivityContactsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         FloatingActionButton fab = binding.addContactFab;
         try {

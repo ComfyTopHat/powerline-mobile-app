@@ -23,29 +23,30 @@ public class MessagesRecyclerListAdapter extends RecyclerView.Adapter<MessagesRe
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-        View listItem= layoutInflater.inflate(R.layout.list_item, parent, false);
-        ViewHolder viewHolder = new ViewHolder(listItem);
-        return viewHolder;
+        View listItem = layoutInflater.inflate(R.layout.message_list_item, parent, false);
+        return new ViewHolder(listItem);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         final MessageDataList myListData = listdata[position];
-        holder.textView.setText(listdata[position].getDescription());
-        holder.dateView.setText(listdata[position].getDate());
-        holder.messageView.setText(listdata[position].getMessage());
-        holder.imageView.setImageResource(listdata[position].getImgId());
-
-
-        holder.relativeLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), MessageThread.class);
-                String senderID = myListData.getSenderID();
-                intent.putExtra("senderID", myListData.getSenderID());
-                intent.putExtra("contact", myListData.getDescription());
-                view.getContext().startActivity(intent);
-            }
+         if (listdata[position].getSelfAuthored()) {
+             holder.rightMessageAuthor.setText(listdata[position].getMessage());
+             holder.rightMessagePreview.setText(listdata[position].getDate());
+             holder.rightImageView.setImageResource(listdata[position].getImgId());
+         }
+         else {
+            // holder.leftMessageAuthor.setText(listdata[position].getAuthor());
+             //holder.left.setText(listdata[position].getDate());
+             holder.leftMessagePreview.setText(listdata[position].getMessage());
+             holder.leftImageView.setImageResource(listdata[position].getImgId());
+         }
+        holder.relativeLayout.setOnClickListener(view -> {
+            Intent intent = new Intent(view.getContext(), MessageThread.class);
+            String senderID = myListData.getSenderID();
+            intent.putExtra("senderID", myListData.getSenderID());
+            intent.putExtra("contact", myListData.getAuthor());
+            view.getContext().startActivity(intent);
         });
     }
 
@@ -56,17 +57,21 @@ public class MessagesRecyclerListAdapter extends RecyclerView.Adapter<MessagesRe
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView imageView;
-        public TextView textView;
-        public TextView dateView;
-        public TextView messageView;
+        public ImageView leftImageView;
+        public ImageView rightImageView;
+        public TextView leftMessageAuthor;
+        public TextView rightMessageAuthor;
+        public TextView rightMessagePreview;
+        public TextView leftMessagePreview;
         public RelativeLayout relativeLayout;
         public ViewHolder(View itemView) {
             super(itemView);
-            this.messageView = (TextView) itemView.findViewById(R.id.message_preview_view);
-            this.dateView = (TextView) itemView.findViewById(R.id.dateView);
-            this.imageView = (ImageView) itemView.findViewById(R.id.imageView);
-            this.textView = (TextView) itemView.findViewById(R.id.textView);
+            this.rightMessageAuthor = (TextView) itemView.findViewById(R.id.right_message_author);
+            this.rightImageView = (ImageView) itemView.findViewById(R.id.right_message_image);
+            this.leftMessagePreview = (TextView) itemView.findViewById(R.id.left_message);
+            this.rightMessagePreview = (TextView) itemView.findViewById(R.id.right_message);
+            this.leftImageView = (ImageView) itemView.findViewById(R.id.left_message_image);
+            this.leftMessageAuthor = (TextView) itemView.findViewById(R.id.left_author);
             relativeLayout = (RelativeLayout)itemView.findViewById(R.id.relativeLayout);
         }
     }
