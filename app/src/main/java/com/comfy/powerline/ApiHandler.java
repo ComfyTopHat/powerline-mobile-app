@@ -23,15 +23,17 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 public class ApiHandler extends AppCompatActivity  {
-    ContactDataList[] contactResponse;
+    List<ContactDataList> contactResponse;
     volatile String strResponse;
     JSONObject response;
     MessageDataList[] messageResponse;
     String version;
-    ContactDataList[] getContacts(String clientID, String jwt) throws InterruptedException {
+    List<ContactDataList> getContacts(String clientID, String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
                 try {
@@ -110,13 +112,13 @@ public class ApiHandler extends AppCompatActivity  {
     }
 
 
-    private ContactDataList[] jsonArrayToContactDataList(JSONArray ja) throws JSONException {
-        ContactDataList[] dataList = new ContactDataList[ja.length()];
+    private List<ContactDataList> jsonArrayToContactDataList(JSONArray ja) throws JSONException {
+        List<ContactDataList> dataList = new ArrayList<>();
         for (int i = 0; i < ja.length(); i++) {
             JSONObject jo = ja.getJSONObject(i);
             String name = jo.getString("name");
             String contactID = jo.getString("contactID");
-            dataList[i] = new ContactDataList(name, android.R.drawable.ic_dialog_info, contactID);
+            dataList.add(i, new ContactDataList(name, android.R.drawable.ic_dialog_info, contactID));
         }
         return dataList;
     }
