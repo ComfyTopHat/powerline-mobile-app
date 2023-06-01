@@ -37,6 +37,7 @@ public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecy
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), MessageThread.class);
+                intent.putExtra("senderID", myListData.getContactID());
                 intent.putExtra("contact", myListData.getDescription());
                 view.getContext().startActivity(intent);
             }

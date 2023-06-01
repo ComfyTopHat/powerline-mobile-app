@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -48,7 +47,7 @@ public class CreateAccountActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private Thread getPOSTHTTPThread(Editable username, Editable password, Editable email) {
+    private Thread sendNewAccount(Editable username, Editable password, Editable email) {
         Runnable httpThread = () -> {
             try {
                 URL url = new URL(base_url + "clients/");
@@ -113,7 +112,7 @@ public class CreateAccountActivity extends AppCompatActivity {
             Editable username = userNameWidget.getText();
             EditText emailWidget = findViewById(R.id.inputEmailAddress);
             Editable email = emailWidget.getText();
-            Thread run = getPOSTHTTPThread(username, password, email);
+            Thread run = sendNewAccount(username, password, email);
             run.start();
             run.join();
             this.displaySuccessMessage(CreateAccountActivity.this,

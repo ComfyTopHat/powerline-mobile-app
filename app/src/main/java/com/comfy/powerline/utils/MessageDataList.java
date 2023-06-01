@@ -5,12 +5,14 @@ public class MessageDataList {
     private Boolean selfAuthored;
     private String date;
     private String senderID;
+    private boolean messagePreview;
     private String message;
     private int imgId;
-    public MessageDataList(String description, String message, int imgId, String date, String senderID, Boolean selfAuthored) {
+    public MessageDataList(String description, String message, int imgId, String date, String senderID, Boolean selfAuthored, Boolean messagePreview) {
         this.author = description;
         this.date = date;
         this.message = message;
+        this.messagePreview = messagePreview;
         if (selfAuthored) {
             this.imgId = 0;
         }
@@ -28,6 +30,11 @@ public class MessageDataList {
     public String getAuthor() {
         return author;
     }
+
+    public boolean isMessagePreview() {
+        return messagePreview;
+    }
+
     public void setAuthor(String author) {
         this.author = author;
     }

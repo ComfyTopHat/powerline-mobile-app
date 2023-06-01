@@ -1,6 +1,10 @@
 package com.comfy.powerline;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.view.View;
+import android.widget.EditText;
 
 import com.comfy.powerline.utils.ContactDataList;
 import com.comfy.powerline.utils.ContactRecyclerListAdapter;
@@ -35,8 +39,12 @@ ContactDataList[] contacts;
         rv.setHasFixedSize(true);
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(adapter);
-        fab.setOnClickListener(view -> Snackbar.make(view, "TBD", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show());
+    }
+
+    public void switchToSendMessage(View v) {
+        Intent intent = new Intent(Contacts.this, sendMessage_v1.class);
+        //intent.putExtra(contacts, "contacts");
+        startActivity(intent);
     }
 
     private ContactDataList[] getContacts() throws InterruptedException {

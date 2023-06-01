@@ -30,20 +30,29 @@ public class MessagesRecyclerListAdapter extends RecyclerView.Adapter<MessagesRe
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         final MessageDataList myListData = listdata[position];
-         if (listdata[position].getSelfAuthored()) {
-             holder.rightMessageAuthor.setText(listdata[position].getMessage());
-             holder.rightMessagePreview.setText(listdata[position].getDate());
-             holder.rightImageView.setImageResource(listdata[position].getImgId());
-         }
-         else {
-            // holder.leftMessageAuthor.setText(listdata[position].getAuthor());
-             //holder.left.setText(listdata[position].getDate());
-             holder.leftMessagePreview.setText(listdata[position].getMessage());
-             holder.leftImageView.setImageResource(listdata[position].getImgId());
-         }
+        // If the messages are for the convo preview:
+        if (listdata[position].isMessagePreview()) {
+            holder.leftMessageAuthor.setText(listdata[position].getAuthor());
+            holder.leftMessagePreview.setText(listdata[position].getMessage());
+            holder.rightMessageAuthor.setText(listdata[position].getDate());
+            holder.leftImageView.setImageResource(listdata[position].getImgId());
+        }
+        // Otherwise check which messages are authorised by the logged in user and assign to the
+        // correct side of the screen
+        else {
+            if (listdata[position].getSelfAuthored()) {
+                holder.rightMessageAuthor.setText(listdata[position].getMessage());
+                holder.rightMessagePreview.setText(listdata[position].getDate());
+                holder.rightImageView.setImageResource(listdata[position].getImgId());
+            } else {
+                // holder.leftMessageAuthor.setText(listdata[position].getAuthor());
+                //holder.left.setText(listdata[position].getDate());
+                holder.leftMessagePreview.setText(listdata[position].getMessage());
+                holder.leftImageView.setImageResource(listdata[position].getImgId());
+            }
+        }
         holder.relativeLayout.setOnClickListener(view -> {
             Intent intent = new Intent(view.getContext(), MessageThread.class);
-            String senderID = myListData.getSenderID();
             intent.putExtra("senderID", myListData.getSenderID());
             intent.putExtra("contact", myListData.getAuthor());
             view.getContext().startActivity(intent);

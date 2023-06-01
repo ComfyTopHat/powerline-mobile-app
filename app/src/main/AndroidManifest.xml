@@ -16,9 +16,15 @@
         android:theme="@style/Theme.Powerline"
         tools:targetApi="29">
         <activity
-            android:name=".MessageThread"
-            android:windowSoftInputMode="stateVisible|adjustResize"
+            android:name=".CreateContact"
             android:exported="false" />
+        <activity
+            android:name=".activity_new_message"
+            android:exported="false" />
+        <activity
+            android:name=".MessageThread"
+            android:exported="false"
+            android:windowSoftInputMode="stateVisible|adjustResize" />
         <activity
             android:name=".Contacts"
             android:exported="false"

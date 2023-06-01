@@ -1,16 +1,20 @@
 package com.comfy.powerline;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.comfy.powerline.utils.MessageDataList;
 import com.comfy.powerline.utils.MessagesRecyclerListAdapter;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONException;
 
@@ -37,13 +41,13 @@ public class MessageThread extends AppCompatActivity {
         tv.setText(contactName);
         try {
             messageThread = api.getThreadMessages(clientID, senderID, jwt);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            setRecyclerView();
+        } catch (Exception e) {
+            // TODO: Display error for invalid message return
         }
-       setRecyclerView();
     }
 
-    public void sendMessage(View v) throws InterruptedException {
+    public void sendMessage(View v) throws InterruptedException, IOException {
         EditText et = findViewById(R.id.messageInput);
         String messageText = String.valueOf(et.getText());
         api.sendMessage(jwt, clientID, senderID, messageText);
