@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -36,6 +35,7 @@ public class CreateAccountActivity extends AppCompatActivity {
         setContentView(R.layout.activity_create_account);
     }
     public void generateUsername(View v) {
+        // TODO: Update this method to its own thread
         Faker faker = new Faker();
         String user = faker.superhero().prefix()+faker.name().firstName()+faker.address().buildingNumber();
         EditText et = findViewById(R.id.usernameInput);
@@ -47,7 +47,7 @@ public class CreateAccountActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private Thread getPOSTHTTPThread(Editable username, Editable password) {
+    private Thread sendNewAccount(Editable username, Editable password, Editable email) {
         Runnable httpThread = () -> {
             try {
                 URL url = new URL(base_url + "clients/");
@@ -56,7 +56,7 @@ public class CreateAccountActivity extends AppCompatActivity {
                 con.setDoOutput(true);
                 con.setRequestProperty("Content-Type", "application/json");
                 con.setRequestProperty("Accept", "application/json");
-                String payload = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+                String payload = "{\"username\":\"" + username + "\",\"email\":\"" + email +"\", \"password\":\"" + password + "\"}";
                 byte[] out = payload.getBytes(StandardCharsets.UTF_8);
                 OutputStream stream = con.getOutputStream();
                 stream.write(out);
@@ -69,7 +69,7 @@ public class CreateAccountActivity extends AppCompatActivity {
                 }
                 is.close();
                 JSONObject result = new JSONObject(responseStrBuilder.toString());
-                //  token = ("Token: " +  (String) result.get("token"));
+                // TODO: Add error handling for failed acc creation
                 con.disconnect();
             } catch (IOException | JSONException e) {
             }
@@ -86,15 +86,13 @@ public class CreateAccountActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void displaySuccessMessage(Context context, String username, String passLastDigs) {
+    private void displaySuccessMessage(Context context, String username, String passLastDigs, String email) {
         new AlertDialog.Builder(context)
                 .setTitle("Account Created")
-                .setMessage("Please note account details: \nUsername: " + username +"\nPassword: ******" + passLastDigs)
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent(CreateAccountActivity.this, MainActivity.class);
-                        startActivity(intent);
-                    }
+                .setMessage("Please note account details: \nUsername: " + username + "\nEmail: " + email + "\nPassword: ******" + passLastDigs)
+                .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                    Intent intent = new Intent(CreateAccountActivity.this, MainActivity.class);
+                    startActivity(intent);
                 })
                 .setIcon(android.R.drawable.ic_dialog_info)
                 .show();
@@ -106,15 +104,20 @@ public class CreateAccountActivity extends AppCompatActivity {
         String passwordStr = passwordWidget.getText().toString().trim();
         EditText passwordConfirmWidget = findViewById(R.id.inputConfirmPassword);
         String passwordConfirm = passwordConfirmWidget.getText().toString().trim();
-        if (Auth.isValid(passwordStr) && passwordStr.equals(passwordConfirm) && (passwordStr.length() > 6)) {
+        if (Auth.isValid(passwordStr) &&
+                passwordStr.equals(passwordConfirm) &&
+                (passwordStr.length() > 6))
+        {
             EditText userNameWidget = findViewById(R.id.usernameInput);
             Editable username = userNameWidget.getText();
-            EditText emailWidget = findViewById(R.id.emailInput);
-            // Editable email = emailWidget.getText();
-            Thread run = getPOSTHTTPThread(username, password);
+            EditText emailWidget = findViewById(R.id.inputEmailAddress);
+            Editable email = emailWidget.getText();
+            Thread run = sendNewAccount(username, password, email);
             run.start();
             run.join();
-            this.displaySuccessMessage(CreateAccountActivity.this, String.valueOf(username), passwordStr.substring(passwordStr.length()-3));
+            this.displaySuccessMessage(CreateAccountActivity.this,
+                    String.valueOf(username),
+                    passwordStr.substring(passwordStr.length()-3), String.valueOf(email));
         }
         else {
             this.displayInvalidPWAlert(CreateAccountActivity.this);
