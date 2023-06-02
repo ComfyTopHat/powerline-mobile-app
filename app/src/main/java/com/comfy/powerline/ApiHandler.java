@@ -63,6 +63,40 @@ public class ApiHandler extends AppCompatActivity  {
         return contactResponse;
     }
 
+    String getClientID(String username) throws InterruptedException {
+        Thread thread = new Thread(() -> {
+            try {
+                try {
+                    URL url = new URL(baseUrl + "/clients/get/clientID/" + username);
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setRequestMethod("GET");
+                    InputStream is = con.getInputStream();
+                    BufferedReader bR = new BufferedReader(new InputStreamReader(is));
+                    String line;
+                    StringBuilder responseStrBuilder = new StringBuilder();
+                    while ((line = bR.readLine()) != null) {
+                        responseStrBuilder.append(line);
+                    }
+                    JSONObject result = new JSONObject(responseStrBuilder.toString());
+                    if (result.getString("status").equals("success")) {
+                        strResponse = result.getString("clientID");
+                    }
+                    else {
+                        strResponse = "0";
+                    }
+                    is.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
+        thread.join();
+        return strResponse;
+    }
+
 
      MessageDataList[] getLatestMessageThreads(String clientID, String jwt) throws InterruptedException {
          Thread thread = new Thread(() -> {

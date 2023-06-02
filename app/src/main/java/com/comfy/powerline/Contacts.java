@@ -29,7 +29,6 @@ SearchView editSearch;
         super.onCreate(savedInstanceState);
         com.comfy.powerline.databinding.ActivityContactsBinding binding = ActivityContactsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        FloatingActionButton fab = binding.addContactFab;
         try {
             contacts = getContacts();
         } catch (InterruptedException e) {

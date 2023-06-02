@@ -1,5 +1,6 @@
 package com.comfy.powerline.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -69,6 +70,7 @@ public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecy
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     public void filter(List<ContactDataList> listdata, String charText) {
         List<ContactDataList> filteredList = new ArrayList<>();
         if (charText.length() == 0) {
