@@ -11,6 +11,7 @@
         android:layout_height="wrap_content"
         android:theme="@style/Theme.Powerline.AppBarOverlay">
 
+
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabs"
             android:layout_width="match_parent"
@@ -26,25 +27,24 @@
                 android:layout_height="wrap_content"
                 android:text="Groups" />
         </com.google.android.material.tabs.TabLayout>
+
+        <SearchView
+            android:layout_width="match_parent"
+            android:id="@+id/contact_search_view"
+            android:queryHint="Enter a username or email to search"
+            android:background="?android:attr/colorEdgeEffect"
+            android:iconifiedByDefault="false"
+            android:layout_height="match_parent" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/contact_recycler_view"
             android:layout_width="match_parent"
-            android:layout_height="840dp"
+            android:layout_height="800dp"
             android:layout_gravity="bottom|end" />
+
+
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/add_contact_fab"
-        android:theme="@style/Theme.Powerline"
-        android:backgroundTint="@color/pl_primary"
-        android:foregroundTint="@color/pl_black"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="@dimen/fab_margin"
-        android:onClick="switchToSendMessage"
-        android:layout_marginBottom="16dp"
-        app:srcCompat="@android:drawable/ic_menu_add" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

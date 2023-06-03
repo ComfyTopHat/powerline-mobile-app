@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.SearchView;
 
 import com.comfy.powerline.utils.ContactDataList;
 import com.comfy.powerline.utils.ContactRecyclerListAdapter;
@@ -17,25 +18,33 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.comfy.powerline.databinding.ActivityContactsBinding;
 
-public class Contacts extends AppCompatActivity {
-ContactDataList[] contacts;
+import java.util.List;
 
+public class Contacts extends AppCompatActivity implements SearchView.OnQueryTextListener {
+List<ContactDataList> contacts;
+ContactRecyclerListAdapter adapter;
+SearchView editSearch;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         com.comfy.powerline.databinding.ActivityContactsBinding binding = ActivityContactsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        FloatingActionButton fab = binding.addContactFab;
         try {
             contacts = getContacts();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        setRecyclerView(contacts);
+        editSearch = findViewById(R.id.contact_search_view);
+        editSearch.setOnQueryTextListener(this);
+    }
+
+    private void setRecyclerView(List<ContactDataList> contacts) {
         RecyclerView rv = findViewById(R.id.contact_recycler_view);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         rv.setLayoutManager(manager);
-        ContactRecyclerListAdapter adapter = new ContactRecyclerListAdapter(contacts);
+        adapter = new ContactRecyclerListAdapter(contacts);
         rv.setHasFixedSize(true);
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(adapter);
@@ -43,14 +52,25 @@ ContactDataList[] contacts;
 
     public void switchToSendMessage(View v) {
         Intent intent = new Intent(Contacts.this, sendMessage_v1.class);
-        //intent.putExtra(contacts, "contacts");
+        intent.putExtra("contacts", (CharSequence) contacts);
         startActivity(intent);
     }
 
-    private ContactDataList[] getContacts() throws InterruptedException {
+    private List<ContactDataList> getContacts() throws InterruptedException {
         ApiHandler api = new ApiHandler();
         String clientID = getSharedPreferences("AUTH", MODE_PRIVATE).getString("clientID", "-");
         String jwt = "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
         return api.getContacts(clientID, jwt);
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String s) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String s) {
+         adapter.filter(contacts, s);
+        return false;
     }
 }

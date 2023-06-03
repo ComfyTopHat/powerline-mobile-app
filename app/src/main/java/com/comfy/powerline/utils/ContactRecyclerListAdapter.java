@@ -1,5 +1,6 @@
 package com.comfy.powerline.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,11 +14,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.comfy.powerline.MessageThread;
 import com.comfy.powerline.R;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Vector;
+
 
 public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecyclerListAdapter.ViewHolder>{
-    private ContactDataList[] listdata;
+    private List<ContactDataList> listdata;
 
-    public ContactRecyclerListAdapter(ContactDataList[] listdata) {
+    public ContactRecyclerListAdapter(List<ContactDataList> listdata) {
         this.listdata = listdata;
     }
     @Override
@@ -29,10 +35,10 @@ public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecy
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        final ContactDataList myListData = listdata[position];
-        holder.textView.setText(listdata[position].getDescription());
-        holder.dateView.setText(listdata[position].getDate());
-        holder.imageView.setImageResource(listdata[position].getImgId());
+        final ContactDataList myListData = listdata.get(position);
+        holder.textView.setText(listdata.get(position).getDescription());
+        holder.dateView.setText(listdata.get(position).getDate());
+        holder.imageView.setImageResource(listdata.get(position).getImgId());
         holder.relativeLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -44,11 +50,11 @@ public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecy
         });
     }
 
-
     @Override
     public int getItemCount() {
-        return listdata.length;
+        return listdata.size();
     }
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView imageView;
@@ -62,5 +68,22 @@ public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecy
             this.textView = (TextView) itemView.findViewById(R.id.left_author);
             relativeLayout = (RelativeLayout)itemView.findViewById(R.id.relativeLayout);
         }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    public void filter(List<ContactDataList> listdata, String charText) {
+        List<ContactDataList> filteredList = new ArrayList<>();
+        if (charText.length() == 0) {
+            this.listdata = listdata;
+        }
+        else {
+            filteredList.add(new ContactDataList("Send message to: " + charText, 0, "NEW"));
+            for (ContactDataList listDatum : listdata) {
+                if (listDatum.getDescription().contains(charText)) {
+                    filteredList.add(listDatum);
+                }
+            }this.listdata = filteredList;
+        }
+        this.notifyDataSetChanged();
     }
 }

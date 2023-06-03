@@ -23,15 +23,17 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 public class ApiHandler extends AppCompatActivity  {
-    ContactDataList[] contactResponse;
+    List<ContactDataList> contactResponse;
     volatile String strResponse;
     JSONObject response;
     MessageDataList[] messageResponse;
     String version;
-    ContactDataList[] getContacts(String clientID, String jwt) throws InterruptedException {
+    List<ContactDataList> getContacts(String clientID, String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
                 try {
@@ -59,6 +61,40 @@ public class ApiHandler extends AppCompatActivity  {
         thread.start();
         thread.join();
         return contactResponse;
+    }
+
+    String getClientID(String username) throws InterruptedException {
+        Thread thread = new Thread(() -> {
+            try {
+                try {
+                    URL url = new URL(baseUrl + "/clients/get/clientID/" + username);
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setRequestMethod("GET");
+                    InputStream is = con.getInputStream();
+                    BufferedReader bR = new BufferedReader(new InputStreamReader(is));
+                    String line;
+                    StringBuilder responseStrBuilder = new StringBuilder();
+                    while ((line = bR.readLine()) != null) {
+                        responseStrBuilder.append(line);
+                    }
+                    JSONObject result = new JSONObject(responseStrBuilder.toString());
+                    if (result.getString("status").equals("success")) {
+                        strResponse = result.getString("clientID");
+                    }
+                    else {
+                        strResponse = "0";
+                    }
+                    is.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
+        thread.join();
+        return strResponse;
     }
 
 
@@ -110,13 +146,13 @@ public class ApiHandler extends AppCompatActivity  {
     }
 
 
-    private ContactDataList[] jsonArrayToContactDataList(JSONArray ja) throws JSONException {
-        ContactDataList[] dataList = new ContactDataList[ja.length()];
+    private List<ContactDataList> jsonArrayToContactDataList(JSONArray ja) throws JSONException {
+        List<ContactDataList> dataList = new ArrayList<>();
         for (int i = 0; i < ja.length(); i++) {
             JSONObject jo = ja.getJSONObject(i);
             String name = jo.getString("name");
             String contactID = jo.getString("contactID");
-            dataList[i] = new ContactDataList(name, android.R.drawable.ic_dialog_info, contactID);
+            dataList.add(i, new ContactDataList(name, android.R.drawable.ic_dialog_info, contactID));
         }
         return dataList;
     }

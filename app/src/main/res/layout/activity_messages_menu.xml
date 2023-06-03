@@ -50,6 +50,9 @@
             android:layout_marginTop="50dp"
             app:layout_anchorGravity="top|center"
             app:layout_constraintTop_toTopOf="parent"
+            android:queryHint="Search for message or contact"
+            android:background="?android:attr/colorEdgeEffect"
+            android:iconifiedByDefault="false"
             tools:layout_editor_absoluteX="0dp" />
 
         <androidx.recyclerview.widget.RecyclerView

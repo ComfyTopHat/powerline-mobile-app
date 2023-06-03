@@ -33,18 +33,26 @@ public class MessageThread extends AppCompatActivity {
         setContentView(R.layout.activity_message_thread);
         TextView tv = findViewById(R.id.contactName);
         jwt = "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
-        String contactName = getIntent().getStringExtra("contact");
         clientID = getSharedPreferences("AUTH", MODE_PRIVATE).getString("clientID", "-");
         senderID = getIntent().getStringExtra("senderID");
         deleteSharedPreferences("contact");
         deleteSharedPreferences("senderID");
-        tv.setText(contactName);
+        String contactExtra = getIntent().getStringExtra("contact");
         try {
+            // If the message is getting sent to a new person then:
+            if (senderID.equals("NEW")) {
+                contactExtra = contactExtra.split(":")[1].trim();
+                EditText et = findViewById(R.id.messageInput);
+                et.setText("User does not exist");
+                et.setEnabled(false);
+                senderID = api.getClientID(contactExtra);
+            }
+            tv.setText(contactExtra);
             messageThread = api.getThreadMessages(clientID, senderID, jwt);
-            setRecyclerView();
         } catch (Exception e) {
             // TODO: Display error for invalid message return
         }
+        setRecyclerView();
     }
 
     public void sendMessage(View v) throws InterruptedException, IOException {
