@@ -152,7 +152,7 @@ public class ApiHandler extends AppCompatActivity  {
             JSONObject jo = ja.getJSONObject(i);
             String name = jo.getString("name");
             String contactID = jo.getString("contactID");
-            dataList.add(i, new ContactDataList(name, android.R.drawable.ic_dialog_info, contactID));
+            dataList.add(i, new ContactDataList(name, R.drawable.baseline_person_24, contactID));
         }
         return dataList;
     }
