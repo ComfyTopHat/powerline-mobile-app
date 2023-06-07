@@ -2,8 +2,6 @@ package com.comfy.powerline;
 
 import static com.comfy.powerline.MainActivity.baseUrl;
 
-import android.text.Editable;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.comfy.powerline.utils.ContactDataList;
@@ -19,18 +17,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class ApiHandler extends AppCompatActivity  {
     List<ContactDataList> contactResponse;
     volatile String strResponse;
-    JSONObject response;
     MessageDataList[] messageResponse;
     String version;
     List<ContactDataList> getContacts(String clientID, String jwt) throws InterruptedException {
@@ -41,16 +35,8 @@ public class ApiHandler extends AppCompatActivity  {
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.setRequestMethod("GET");
                     con.setRequestProperty("Authorization", jwt);
-                    InputStream is = con.getInputStream();
-                    BufferedReader bR = new BufferedReader(new InputStreamReader(is));
-                    String line;
-                    StringBuilder responseStrBuilder = new StringBuilder();
-                    while ((line = bR.readLine()) != null) {
-                        responseStrBuilder.append(line);
-                    }
-                    JSONArray result = new JSONArray(responseStrBuilder.toString());
+                    JSONArray result = readResponseObject(con, JSONArray.class);
                     contactResponse = jsonArrayToContactDataList(result);
-                    is.close();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -70,21 +56,13 @@ public class ApiHandler extends AppCompatActivity  {
                     URL url = new URL(baseUrl + "/clients/get/clientID/" + username);
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.setRequestMethod("GET");
-                    InputStream is = con.getInputStream();
-                    BufferedReader bR = new BufferedReader(new InputStreamReader(is));
-                    String line;
-                    StringBuilder responseStrBuilder = new StringBuilder();
-                    while ((line = bR.readLine()) != null) {
-                        responseStrBuilder.append(line);
-                    }
-                    JSONObject result = new JSONObject(responseStrBuilder.toString());
+                    JSONObject result = readResponseObject(con, JSONObject.class);
                     if (result.getString("status").equals("success")) {
                         strResponse = result.getString("clientID");
                     }
                     else {
                         strResponse = "0";
                     }
-                    is.close();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -106,16 +84,8 @@ public class ApiHandler extends AppCompatActivity  {
                 con.setRequestMethod("GET");
                 con.setRequestProperty("Accept", "application/json");
                 con.setRequestProperty("Authorization", jwt);
-                InputStream is = con.getInputStream();
-                BufferedReader bR = new BufferedReader( new InputStreamReader(is));
-                String line;
-                StringBuilder responseStrBuilder = new StringBuilder();
-                while((line =  bR.readLine()) != null){
-                    responseStrBuilder.append(line);
-                }
-                is.close();
-                JSONArray result = new JSONArray(responseStrBuilder.toString());
-                messageResponse = jsonArraytoMessageThreadDataList(result, clientID, true);
+                JSONArray result = readResponseObject(con, JSONArray.class);
+                messageResponse = jsonArrayToMessageThreadDataList(result, clientID, true);
             } catch (IOException | JSONException e) {
                 throw new RuntimeException(e);
             }
@@ -125,7 +95,7 @@ public class ApiHandler extends AppCompatActivity  {
         return messageResponse;
     }
     
-    private MessageDataList[] jsonArraytoMessageThreadDataList(JSONArray ja, String clientID, Boolean messagePreview) throws JSONException {
+    private MessageDataList[] jsonArrayToMessageThreadDataList(JSONArray ja, String clientID, Boolean messagePreview) throws JSONException {
         MessageDataList[] dataList = new MessageDataList[ja.length()];
         boolean selfAuthored;
         for (int i =0; i < ja.length(); i++) {
@@ -134,12 +104,7 @@ public class ApiHandler extends AppCompatActivity  {
             String text = ja.getJSONObject(i).getString("text");
             String senderID = ja.getJSONObject(i).getString("senderID");
             date = date.substring(0, (date.length() - 10));
-            if (senderID.equals(clientID)) {
-                selfAuthored = true;
-            }
-            else {
-                selfAuthored = false;
-            }
+            selfAuthored = senderID.equals(clientID);
             dataList[i] = new MessageDataList(sender, text, android.R.drawable.ic_dialog_info, date, senderID, selfAuthored, messagePreview);
         }
         return dataList;
@@ -155,6 +120,24 @@ public class ApiHandler extends AppCompatActivity  {
             dataList.add(i, new ContactDataList(name, R.drawable.baseline_person_24, contactID));
         }
         return dataList;
+    }
+
+    private <T> T readResponseObject(HttpURLConnection con, Class<T> target) throws IOException, JSONException {
+        InputStream is = con.getInputStream();
+        BufferedReader bR = new BufferedReader(new InputStreamReader(is));
+        String line;
+        StringBuilder responseStrBuilder = new StringBuilder();
+        while ((line = bR.readLine()) != null) {
+            responseStrBuilder.append(line);
+        }
+        is.close();
+        if (JSONArray.class.equals(target)) {
+            return target.cast(new JSONArray(responseStrBuilder.toString()));
+        } else if (JSONObject.class.equals(target)) {
+            return target.cast(new JSONObject(responseStrBuilder.toString()));
+        } else {
+            return target.cast(responseStrBuilder.toString());
+        }
     }
 
     protected void setVersion() throws InterruptedException {
@@ -198,16 +181,7 @@ public class ApiHandler extends AppCompatActivity  {
                 byte[] out = payload.getBytes(StandardCharsets.UTF_8);
                 OutputStream stream = con.getOutputStream();
                 stream.write(out);
-                InputStream is = con.getInputStream();
-                BufferedReader bR = new BufferedReader(new InputStreamReader(is));
-                String line;
-                StringBuilder responseStrBuilder = new StringBuilder();
-                while ((line = bR.readLine()) != null) {
-                    responseStrBuilder.append(line);
-                }
-                is.close();
-                con.disconnect();
-                strResponse = responseStrBuilder.toString();
+                strResponse = readResponseObject(con, String.class);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -237,7 +211,7 @@ public class ApiHandler extends AppCompatActivity  {
                 HttpURLConnection con = getPOSTHTTPConnection("clients/messages/", jwt);
                 String response = sendData(con, payload);
                 JSONArray result = new JSONArray(response);
-                messageResponse = jsonArraytoMessageThreadDataList(result, clientID, false);
+                messageResponse = jsonArrayToMessageThreadDataList(result, clientID, false);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } catch (JSONException | InterruptedException ignored) {
