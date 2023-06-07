@@ -136,11 +136,6 @@ String token = "";
         }
     }
 
-
-    protected String getClientID() {
-        return getSharedPreferences("AUTH", MODE_PRIVATE).getString("clientID", "-");
-    }
-
     public void createAccount(View view) {
         Intent intent = new Intent(MainActivity.this, CreateAccountActivity.class);
         startActivity(intent);

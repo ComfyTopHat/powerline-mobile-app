@@ -2,9 +2,15 @@ package com.comfy.powerline;
 
 import static com.comfy.powerline.MainActivity.baseUrl;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.comfy.powerline.utils.ContactDataList;
+import com.comfy.powerline.utils.ConversationDataList;
 import com.comfy.powerline.utils.MessageDataList;
 
 import org.json.JSONArray;
@@ -19,11 +25,15 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ApiHandler extends AppCompatActivity  {
     List<ContactDataList> contactResponse;
+    List<ConversationDataList> conversationDataList;
     volatile String strResponse;
     MessageDataList[] messageResponse;
     String version;
@@ -76,7 +86,8 @@ public class ApiHandler extends AppCompatActivity  {
     }
 
 
-     MessageDataList[] getLatestMessageThreads(String clientID, String jwt) throws InterruptedException {
+     @RequiresApi(api = Build.VERSION_CODES.O)
+     List<ConversationDataList> getLatestMessageThreads(String clientID, String jwt) throws InterruptedException {
          Thread thread = new Thread(() -> {
             try {
                 URL url = new URL(baseUrl + "contacts/get/thread/{recipient_id}?recipientID=" + clientID);
@@ -85,14 +96,57 @@ public class ApiHandler extends AppCompatActivity  {
                 con.setRequestProperty("Accept", "application/json");
                 con.setRequestProperty("Authorization", jwt);
                 JSONArray result = readResponseObject(con, JSONArray.class);
-                messageResponse = jsonArrayToMessageThreadDataList(result, clientID, true);
+                conversationDataList = jsonArrayToConversationDataList(result);
             } catch (IOException | JSONException e) {
                 throw new RuntimeException(e);
             }
         });
         thread.start();
         thread.join();
-        return messageResponse;
+        return conversationDataList;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private List<ConversationDataList> jsonArrayToConversationDataList(JSONArray ja) throws JSONException {
+        List<ConversationDataList> conversationDataLists = new ArrayList<>();
+        for (int i =0; i < ja.length(); i++) {
+            LocalDateTime dateTime = LocalDateTime.parse(ja.getJSONObject(i).getString("timestamp"));
+            String formattedDateTime = formatTimeStamp(dateTime);
+            String sender = ja.getJSONObject(i).getString("senderName");
+            String senderID = ja.getJSONObject(i).getString("senderID");
+            String text = ja.getJSONObject(i).getString("text");
+            String recipientName = ja.getJSONObject(i).getString("recipientName");
+            String recipientID = ja.getJSONObject(i).getString("recipientID");
+            conversationDataLists.add(new ConversationDataList(recipientName, text, formattedDateTime, 0));
+        }
+        return conversationDataLists;
+    }
+
+    private String formatTimeStamp(LocalDateTime messageDateTime) {
+        String displayedTimestamp = "";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            DayOfWeek DoW = LocalDate.now().getDayOfWeek();
+            DayOfWeek messageDoW = messageDateTime.getDayOfWeek();
+            long daysSinceMessage = DAYS.between(messageDateTime.toLocalDate(), LocalDate.now());
+            // If the message was sent same day, then display time
+            if (DoW.equals(messageDoW))
+            {
+                String amPM = "am";
+                if (messageDateTime.getHour() >= 12){
+                    amPM = "pm";
+                }
+                displayedTimestamp = messageDateTime.getHour() +  ":" + messageDateTime.getMinute() + amPM;
+            } else if (daysSinceMessage < 7) {
+                displayedTimestamp = messageDoW.toString().substring(0, 1).toUpperCase() + messageDoW.toString().substring(1, 3).toLowerCase();
+            }
+            else {
+                String messageMonth = messageDateTime.getMonth().toString();
+                displayedTimestamp = messageDateTime.getDayOfMonth() + " " +
+                        messageMonth.substring(0, 1).toUpperCase() +
+                        messageMonth.substring(1, 3).toLowerCase();
+            }
+        }
+        return displayedTimestamp;
     }
     
     private MessageDataList[] jsonArrayToMessageThreadDataList(JSONArray ja, String clientID, Boolean messagePreview) throws JSONException {
