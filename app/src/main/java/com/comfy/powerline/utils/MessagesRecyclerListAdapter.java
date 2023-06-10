@@ -13,11 +13,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.comfy.powerline.MessageThread;
 import com.comfy.powerline.R;
 
+import java.util.List;
+
 
 public class MessagesRecyclerListAdapter extends RecyclerView.Adapter<MessagesRecyclerListAdapter.ViewHolder>{
-    private MessageDataList[] listdata;
+    private List<MessageDataList> listdata;
 
-    public MessagesRecyclerListAdapter(MessageDataList[] listdata) {
+    public MessagesRecyclerListAdapter(List<MessageDataList> listdata) {
         this.listdata = listdata;
     }
     @Override
@@ -29,26 +31,26 @@ public class MessagesRecyclerListAdapter extends RecyclerView.Adapter<MessagesRe
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        final MessageDataList myListData = listdata[position];
+        final MessageDataList myListData = listdata.get(position);
         // If the messages are for the convo preview:
-        if (listdata[position].isMessagePreview()) {
-            holder.leftMessageAuthor.setText(listdata[position].getAuthor());
-            holder.leftMessagePreview.setText(listdata[position].getMessage());
-            holder.rightMessageAuthor.setText(listdata[position].getDate());
-            holder.leftImageView.setImageResource(listdata[position].getImgId());
+        if (listdata.get(position).isMessagePreview()) {
+            holder.leftMessageAuthor.setText(listdata.get(position).getAuthor());
+            holder.leftMessagePreview.setText(listdata.get(position).getMessage());
+            holder.rightMessageAuthor.setText(listdata.get(position).getDate());
+            holder.leftImageView.setImageResource(listdata.get(position).getImgId());
         }
         // Otherwise check which messages are authorised by the logged in user and assign to the
         // correct side of the screen
         else {
-            if (listdata[position].getSelfAuthored()) {
-                holder.rightMessageAuthor.setText(listdata[position].getMessage());
-                holder.rightMessagePreview.setText(listdata[position].getDate());
-                holder.rightImageView.setImageResource(listdata[position].getImgId());
+            if (listdata.get(position).getSelfAuthored()) {
+                holder.rightMessageAuthor.setText(listdata.get(position).getMessage());
+                holder.rightMessagePreview.setText(listdata.get(position).getDate());
+                holder.rightImageView.setImageResource(listdata.get(position).getImgId());
             } else {
                 // holder.leftMessageAuthor.setText(listdata[position].getAuthor());
                 //holder.left.setText(listdata[position].getDate());
-                holder.leftMessagePreview.setText(listdata[position].getMessage());
-                holder.leftImageView.setImageResource(listdata[position].getImgId());
+                holder.leftMessagePreview.setText(listdata.get(position).getMessage());
+                holder.leftImageView.setImageResource(listdata.get(position).getImgId());
             }
         }
         holder.relativeLayout.setOnClickListener(view -> {
@@ -62,8 +64,9 @@ public class MessagesRecyclerListAdapter extends RecyclerView.Adapter<MessagesRe
 
     @Override
     public int getItemCount() {
-        return listdata.length;
+        return listdata.size();
     }
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView leftImageView;

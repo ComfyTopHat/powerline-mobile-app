@@ -56,6 +56,7 @@ public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecy
     }
 
 
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView imageView;
         public TextView textView;

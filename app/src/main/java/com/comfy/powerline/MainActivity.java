@@ -122,6 +122,10 @@ String token = "";
         EditText passwordInput = findViewById(R.id.passwordInput);
         Editable username = emailInput.getText();
         Editable password = passwordInput.getText();
+        //TODO: Remove this before committing
+        emailInput.setText("Comfy");
+        passwordInput.setText("Barber!123");
+
         Thread run = getPOSTHTTPThread(username, password);
         run.start();
         run.join();

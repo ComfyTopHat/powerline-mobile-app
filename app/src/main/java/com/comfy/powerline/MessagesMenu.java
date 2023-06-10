@@ -4,20 +4,25 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.SearchView;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.comfy.powerline.utils.ContactRecyclerListAdapter;
 import com.comfy.powerline.utils.ConversationDataList;
 import com.comfy.powerline.utils.ConversationDataListAdapter;
 
 import org.json.JSONException;
 import java.util.List;
 
-public class MessagesMenu extends AppCompatActivity {
+public class MessagesMenu extends AppCompatActivity implements SearchView.OnQueryTextListener {
     String baseUrl = MainActivity.baseUrl;
+    ConversationDataListAdapter adapter;
+    List<ConversationDataList> conversations;
+    SearchView editSearch;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -25,10 +30,13 @@ public class MessagesMenu extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages_menu);
         try {
-            setRecyclerView(getMessageThreads());
+            conversations = getMessageThreads();
+            setRecyclerView(conversations);
         } catch (JSONException | InterruptedException e) {
             throw new RuntimeException(e);
         }
+        editSearch = findViewById(R.id.message_search_view);
+        editSearch.setOnQueryTextListener(this);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -57,9 +65,21 @@ public class MessagesMenu extends AppCompatActivity {
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         rv.setLayoutManager(manager);
-        ConversationDataListAdapter adapter = new ConversationDataListAdapter(CDL);
+        adapter = new ConversationDataListAdapter(CDL);
         rv.setHasFixedSize(true);
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(adapter);
     }
+
+    @Override
+    public boolean onQueryTextSubmit(String s) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String s) {
+        adapter.filter(conversations, s);
+        return false;
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.comfy.powerline.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.comfy.powerline.MessageThread;
 import com.comfy.powerline.R;
+
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -38,8 +41,9 @@ public class ConversationDataListAdapter extends RecyclerView.Adapter<Conversati
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), MessageThread.class);
-                //intent.putExtra("senderID", myListData.getContactID());
-                //intent.putExtra("contact", myListData.getDescription());
+
+                intent.putExtra("senderID", myListData.getContactID());
+                intent.putExtra("contact", myListData.getContactName());
                 view.getContext().startActivity(intent);
             }
         });
@@ -50,6 +54,22 @@ public class ConversationDataListAdapter extends RecyclerView.Adapter<Conversati
         return listData.size();
     }
 
+    @SuppressLint("NotifyDataSetChanged")
+    public void filter(List<ConversationDataList> listdata, String charText) {
+        List<ConversationDataList> filteredList = new ArrayList<>();
+        if (charText.length() == 0) {
+            this.listData = listdata;
+        }
+        else {
+           // filteredList.add(new ConversationDataList("Send message to: " + charText, 0, "NEW"));
+            for (ConversationDataList listDatum : listdata) {
+                if ((listDatum.getMessagePreview().contains(charText)) || listDatum.getContactName().contains(charText)) {
+                    filteredList.add(listDatum);
+                }
+            }this.listData = filteredList;
+        }
+        this.notifyDataSetChanged();
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView contactImage;

@@ -35,7 +35,7 @@ public class ApiHandler extends AppCompatActivity  {
     List<ContactDataList> contactResponse;
     List<ConversationDataList> conversationDataList;
     volatile String strResponse;
-    MessageDataList[] messageResponse;
+    List<MessageDataList> messageResponse;
     String version;
     List<ContactDataList> getContacts(String clientID, String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
@@ -96,7 +96,7 @@ public class ApiHandler extends AppCompatActivity  {
                 con.setRequestProperty("Accept", "application/json");
                 con.setRequestProperty("Authorization", jwt);
                 JSONArray result = readResponseObject(con, JSONArray.class);
-                conversationDataList = jsonArrayToConversationDataList(result);
+                conversationDataList = jsonArrayToConversationDataList(clientID, result);
             } catch (IOException | JSONException e) {
                 throw new RuntimeException(e);
             }
@@ -107,17 +107,25 @@ public class ApiHandler extends AppCompatActivity  {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private List<ConversationDataList> jsonArrayToConversationDataList(JSONArray ja) throws JSONException {
+    private List<ConversationDataList> jsonArrayToConversationDataList(String clientID, JSONArray ja) throws JSONException {
         List<ConversationDataList> conversationDataLists = new ArrayList<>();
         for (int i =0; i < ja.length(); i++) {
             LocalDateTime dateTime = LocalDateTime.parse(ja.getJSONObject(i).getString("timestamp"));
             String formattedDateTime = formatTimeStamp(dateTime);
             String sender = ja.getJSONObject(i).getString("senderName");
-            String senderID = ja.getJSONObject(i).getString("senderID");
+            String contactID = ja.getJSONObject(i).getString("senderID");
             String text = ja.getJSONObject(i).getString("text");
             String recipientName = ja.getJSONObject(i).getString("recipientName");
             String recipientID = ja.getJSONObject(i).getString("recipientID");
-            conversationDataLists.add(new ConversationDataList(recipientName, text, formattedDateTime, 0));
+
+            //
+            if (!recipientID.equals(clientID)) {
+                contactID = recipientID;
+            }
+            else {
+                recipientName = sender;
+            }
+            conversationDataLists.add(new ConversationDataList(recipientName, contactID, text, formattedDateTime, 0));
         }
         return conversationDataLists;
     }
@@ -149,8 +157,8 @@ public class ApiHandler extends AppCompatActivity  {
         return displayedTimestamp;
     }
     
-    private MessageDataList[] jsonArrayToMessageThreadDataList(JSONArray ja, String clientID, Boolean messagePreview) throws JSONException {
-        MessageDataList[] dataList = new MessageDataList[ja.length()];
+    private List<MessageDataList> jsonArrayToMessageThreadDataList(JSONArray ja, String clientID) throws JSONException {
+        List<MessageDataList> dataList = new ArrayList<>();
         boolean selfAuthored;
         for (int i =0; i < ja.length(); i++) {
             String date = ja.getJSONObject(i).getString("timestamp");
@@ -159,7 +167,7 @@ public class ApiHandler extends AppCompatActivity  {
             String senderID = ja.getJSONObject(i).getString("senderID");
             date = date.substring(0, (date.length() - 10));
             selfAuthored = senderID.equals(clientID);
-            dataList[i] = new MessageDataList(sender, text, android.R.drawable.ic_dialog_info, date, senderID, selfAuthored, messagePreview);
+            dataList.add(i, new MessageDataList(sender, text, android.R.drawable.ic_dialog_info, date, senderID, selfAuthored, false));
         }
         return dataList;
     }
@@ -252,7 +260,7 @@ public class ApiHandler extends AppCompatActivity  {
         sendData(con, payload);
     }
 
-    MessageDataList[] getThreadMessages(String clientID, String filterID, String jwt) throws InterruptedException {
+    List<MessageDataList> getThreadMessages(String clientID, String filterID, String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
                 String payload;
@@ -265,7 +273,7 @@ public class ApiHandler extends AppCompatActivity  {
                 HttpURLConnection con = getPOSTHTTPConnection("clients/messages/", jwt);
                 String response = sendData(con, payload);
                 JSONArray result = new JSONArray(response);
-                messageResponse = jsonArrayToMessageThreadDataList(result, clientID, false);
+                messageResponse = jsonArrayToMessageThreadDataList(result, clientID);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } catch (JSONException | InterruptedException ignored) {
