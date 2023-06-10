@@ -1,42 +1,46 @@
 package com.comfy.powerline;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.SearchView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.comfy.powerline.utils.MessageDataList;
-import com.comfy.powerline.utils.MessagesRecyclerListAdapter;
+import com.comfy.powerline.utils.ContactRecyclerListAdapter;
+import com.comfy.powerline.utils.ConversationDataList;
+import com.comfy.powerline.utils.ConversationDataListAdapter;
 
 import org.json.JSONException;
+import java.util.List;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-public class MessagesMenu extends AppCompatActivity {
+public class MessagesMenu extends AppCompatActivity implements SearchView.OnQueryTextListener {
     String baseUrl = MainActivity.baseUrl;
+    ConversationDataListAdapter adapter;
+    List<ConversationDataList> conversations;
+    SearchView editSearch;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages_menu);
         try {
-            setRecyclerView(getMessageThreads());
+            conversations = getMessageThreads();
+            setRecyclerView(conversations);
         } catch (JSONException | InterruptedException e) {
             throw new RuntimeException(e);
         }
+        editSearch = findViewById(R.id.message_search_view);
+        editSearch.setOnQueryTextListener(this);
     }
 
-    private MessageDataList[] getMessageThreads() throws InterruptedException {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private List<ConversationDataList> getMessageThreads() throws InterruptedException {
         ApiHandler api = new ApiHandler();
         return(api.getLatestMessageThreads(getClientID(), getToken()));
     }
@@ -56,14 +60,26 @@ public class MessagesMenu extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void setRecyclerView(MessageDataList[] mdl) throws JSONException {
+    private void setRecyclerView(List<ConversationDataList> CDL) throws JSONException {
         RecyclerView rv = findViewById(R.id.message_recycler_view);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         rv.setLayoutManager(manager);
-        MessagesRecyclerListAdapter adapter = new MessagesRecyclerListAdapter(mdl);
+        adapter = new ConversationDataListAdapter(CDL);
         rv.setHasFixedSize(true);
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(adapter);
     }
+
+    @Override
+    public boolean onQueryTextSubmit(String s) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String s) {
+        adapter.filter(conversations, s);
+        return false;
+    }
+
 }
