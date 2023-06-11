@@ -1,90 +1,70 @@
-package com.comfy.powerline.utils;
+package com.comfy.powerline.utils
 
-import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.RelativeLayout
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.comfy.powerline.MessageThread
+import com.comfy.powerline.R
 
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.comfy.powerline.MessageThread;
-import com.comfy.powerline.R;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Vector;
-
-
-public class ContactRecyclerListAdapter extends RecyclerView.Adapter<ContactRecyclerListAdapter.ViewHolder>{
-    private List<ContactDataList> listdata;
-
-    public ContactRecyclerListAdapter(List<ContactDataList> listdata) {
-        this.listdata = listdata;
-    }
-    @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-        View listItem= layoutInflater.inflate(R.layout.message_list_item, parent, false);
-        return new ViewHolder(listItem);
+class ContactRecyclerListAdapter(private var listdata: List<ContactDataList>) :
+    RecyclerView.Adapter<ContactRecyclerListAdapter.ViewHolder>() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val layoutInflater = LayoutInflater.from(parent.context)
+        val listItem = layoutInflater.inflate(R.layout.message_list_item, parent, false)
+        return ViewHolder(listItem)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        final ContactDataList myListData = listdata.get(position);
-        holder.textView.setText(listdata.get(position).getDescription());
-        holder.dateView.setText(listdata.get(position).getDate());
-        holder.imageView.setImageResource(listdata.get(position).getImgId());
-        holder.relativeLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), MessageThread.class);
-                intent.putExtra("senderID", myListData.getContactID());
-                intent.putExtra("contact", myListData.getDescription());
-                view.getContext().startActivity(intent);
-            }
-        });
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val myListData = listdata[position]
+        holder.textView.text = listdata[position].description
+        holder.dateView.text = listdata[position].date
+        holder.imageView.setImageResource(listdata[position].imgId)
+        holder.relativeLayout.setOnClickListener { view ->
+            val intent = Intent(view.context, MessageThread::class.java)
+            intent.putExtra("senderID", myListData.contactID)
+            intent.putExtra("contact", myListData.description)
+            view.context.startActivity(intent)
+        }
     }
 
-    @Override
-    public int getItemCount() {
-        return listdata.size();
+    override fun getItemCount(): Int {
+        return listdata.size
     }
 
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        var imageView: ImageView
+        var textView: TextView
+        var dateView: TextView
+        var relativeLayout: RelativeLayout
 
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView imageView;
-        public TextView textView;
-        public TextView dateView;
-        public RelativeLayout relativeLayout;
-        public ViewHolder(View itemView) {
-            super(itemView);
-            this.dateView = (TextView) itemView.findViewById(R.id.left_message);
-            this.imageView = (ImageView) itemView.findViewById(R.id.left_message_image);
-            this.textView = (TextView) itemView.findViewById(R.id.left_author);
-            relativeLayout = (RelativeLayout)itemView.findViewById(R.id.relativeLayout);
+        init {
+            dateView = itemView.findViewById<View>(R.id.left_message) as TextView
+            imageView = itemView.findViewById<View>(R.id.left_message_image) as ImageView
+            textView = itemView.findViewById<View>(R.id.left_author) as TextView
+            relativeLayout = itemView.findViewById<View>(R.id.relativeLayout) as RelativeLayout
         }
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    public void filter(List<ContactDataList> listdata, String charText) {
-        List<ContactDataList> filteredList = new ArrayList<>();
-        if (charText.length() == 0) {
-            this.listdata = listdata;
-        }
-        else {
-            filteredList.add(new ContactDataList("Send message to: " + charText, 0, "NEW"));
-            for (ContactDataList listDatum : listdata) {
-                if (listDatum.getDescription().contains(charText)) {
-                    filteredList.add(listDatum);
+    fun filter(listdata: List<ContactDataList>, charText: String) {
+        val filteredList: MutableList<ContactDataList> = ArrayList()
+        if (charText.length == 0) {
+            this.listdata = listdata
+        } else {
+            filteredList.add(ContactDataList("Send message to: $charText", 0, "NEW"))
+            for (listDatum in listdata) {
+                if (listDatum.description?.contains(charText) == true) {
+                    filteredList.add(listDatum)
                 }
-            }this.listdata = filteredList;
+            }
+            this.listdata = filteredList
         }
-        this.notifyDataSetChanged();
+        notifyDataSetChanged()
     }
 }

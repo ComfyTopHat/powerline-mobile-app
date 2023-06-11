@@ -1,10 +1,10 @@
-package com.comfy.powerline.utils;
+package com.comfy.powerline.utils
 
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView
 
-public class AppToolbox {
-
-    public static void notifyNewMessageAdded(RecyclerView.Adapter adapter) {
-        adapter.notifyItemInserted(adapter.getItemCount());
+object AppToolbox {
+    @JvmStatic
+    fun notifyNewMessageAdded(adapter: RecyclerView.Adapter<*>) {
+        adapter.notifyItemInserted(adapter.itemCount)
     }
 }

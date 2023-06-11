@@ -1,90 +1,73 @@
-package com.comfy.powerline.utils;
+package com.comfy.powerline.utils
 
-import android.content.Intent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
+import android.content.Intent
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.RelativeLayout
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.comfy.powerline.MessageThread
+import com.comfy.powerline.R
 
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.comfy.powerline.MessageThread;
-import com.comfy.powerline.R;
-
-import java.util.List;
-
-
-public class MessagesRecyclerListAdapter extends RecyclerView.Adapter<MessagesRecyclerListAdapter.ViewHolder>{
-    private List<MessageDataList> listdata;
-
-    public MessagesRecyclerListAdapter(List<MessageDataList> listdata) {
-        this.listdata = listdata;
-    }
-    @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-        View listItem = layoutInflater.inflate(R.layout.message_list_item, parent, false);
-        return new ViewHolder(listItem);
+class MessagesRecyclerListAdapter(private val listdata: List<MessageDataList>) :
+    RecyclerView.Adapter<MessagesRecyclerListAdapter.ViewHolder>() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val layoutInflater = LayoutInflater.from(parent.context)
+        val listItem = layoutInflater.inflate(R.layout.message_list_item, parent, false)
+        return ViewHolder(listItem)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        final MessageDataList myListData = listdata.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val myListData = listdata[position]
         // If the messages are for the convo preview:
-        if (listdata.get(position).isMessagePreview()) {
-            holder.leftMessageAuthor.setText(listdata.get(position).getAuthor());
-            holder.leftMessagePreview.setText(listdata.get(position).getMessage());
-            holder.rightMessageAuthor.setText(listdata.get(position).getDate());
-            holder.leftImageView.setImageResource(listdata.get(position).getImgId());
-        }
-        // Otherwise check which messages are authorised by the logged in user and assign to the
-        // correct side of the screen
-        else {
-            if (listdata.get(position).getSelfAuthored()) {
-                holder.rightMessageAuthor.setText(listdata.get(position).getMessage());
-                holder.rightMessagePreview.setText(listdata.get(position).getDate());
-                holder.rightImageView.setImageResource(listdata.get(position).getImgId());
+        if (listdata[position].isMessagePreview) {
+            holder.leftMessageAuthor.text = listdata[position].author
+            holder.leftMessagePreview.text = listdata[position].message
+            holder.rightMessageAuthor.text = listdata[position].date
+            holder.leftImageView.setImageResource(listdata[position].imgId)
+        } else {
+            if (listdata[position].selfAuthored == true) {
+                holder.rightMessageAuthor.text = listdata[position].message
+                holder.rightMessagePreview.text = listdata[position].date
+                holder.rightImageView.setImageResource(listdata[position].imgId)
             } else {
                 // holder.leftMessageAuthor.setText(listdata[position].getAuthor());
-                //holder.left.setText(listdata[position].getDate());
-                holder.leftMessagePreview.setText(listdata.get(position).getMessage());
-                holder.leftImageView.setImageResource(listdata.get(position).getImgId());
+                //\holder.left.setText(listdata[position].getDate());
+                holder.leftMessagePreview.text = listdata[position].message
+                holder.leftImageView.setImageResource(listdata[position].imgId)
             }
         }
-        holder.relativeLayout.setOnClickListener(view -> {
-            Intent intent = new Intent(view.getContext(), MessageThread.class);
-            intent.putExtra("senderID", myListData.getSenderID());
-            intent.putExtra("contact", myListData.getAuthor());
-            view.getContext().startActivity(intent);
-        });
+        holder.relativeLayout.setOnClickListener { view: View ->
+            val intent = Intent(view.context, MessageThread::class.java)
+            intent.putExtra("senderID", myListData.senderID)
+            intent.putExtra("contact", myListData.author)
+            view.context.startActivity(intent)
+        }
     }
 
-
-    @Override
-    public int getItemCount() {
-        return listdata.size();
+    override fun getItemCount(): Int {
+        return listdata.size
     }
 
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        var leftImageView: ImageView
+        var rightImageView: ImageView
+        var leftMessageAuthor: TextView
+        var rightMessageAuthor: TextView
+        var rightMessagePreview: TextView
+        var leftMessagePreview: TextView
+        var relativeLayout: RelativeLayout
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView leftImageView;
-        public ImageView rightImageView;
-        public TextView leftMessageAuthor;
-        public TextView rightMessageAuthor;
-        public TextView rightMessagePreview;
-        public TextView leftMessagePreview;
-        public RelativeLayout relativeLayout;
-        public ViewHolder(View itemView) {
-            super(itemView);
-            this.rightMessageAuthor = (TextView) itemView.findViewById(R.id.right_message_author);
-            this.rightImageView = (ImageView) itemView.findViewById(R.id.right_message_image);
-            this.leftMessagePreview = (TextView) itemView.findViewById(R.id.left_message);
-            this.rightMessagePreview = (TextView) itemView.findViewById(R.id.right_message);
-            this.leftImageView = (ImageView) itemView.findViewById(R.id.left_message_image);
-            this.leftMessageAuthor = (TextView) itemView.findViewById(R.id.left_author);
-            relativeLayout = (RelativeLayout)itemView.findViewById(R.id.relativeLayout);
+        init {
+            leftMessageAuthor = itemView.findViewById<View>(R.id.left_author) as TextView
+            rightMessageAuthor = itemView.findViewById<View>(R.id.right_message_author) as TextView
+            leftImageView = itemView.findViewById<View>(R.id.left_message_image) as ImageView
+            rightImageView = itemView.findViewById<View>(R.id.right_message_image) as ImageView
+            leftMessagePreview = itemView.findViewById<View>(R.id.left_message) as TextView
+            rightMessagePreview = itemView.findViewById<View>(R.id.right_message) as TextView
+            relativeLayout = itemView.findViewById<View>(R.id.relativeLayout) as RelativeLayout
         }
     }
 }

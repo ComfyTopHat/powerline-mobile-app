@@ -1,61 +1,41 @@
-package com.comfy.powerline.utils;
+package com.comfy.powerline.utils
 
-public class MessageDataList {
-    private String author;
-    private Boolean selfAuthored;
-    private String date;
-    private String senderID;
-    private boolean messagePreview;
-    private String message;
-    private int imgId;
-    public MessageDataList(String description, String message, int imgId, String date, String senderID, Boolean selfAuthored, Boolean messagePreview) {
-        this.author = description;
-        this.date = date;
-        this.message = message;
-        this.messagePreview = messagePreview;
+class MessageDataList {
+    var author: String
+    var selfAuthored: Boolean? = null
+    var date: String? = null
+    var senderID: String? = null
+        private set
+    var isMessagePreview = false
+        private set
+    var message: String? = null
+        private set
+    var imgId = 0
+
+    constructor(
+        description: String,
+        message: String?,
+        imgId: Int,
+        date: String?,
+        senderID: String?,
+        selfAuthored: Boolean,
+        messagePreview: Boolean
+    ) {
+        author = description
+        this.date = date
+        this.message = message
+        isMessagePreview = messagePreview
         if (selfAuthored) {
-            this.imgId = 0;
+            this.imgId = 0
+        } else {
+            this.imgId = imgId
         }
-        else {
-            this.imgId = imgId;
-        }
-        this.senderID = senderID;
-        this.selfAuthored = selfAuthored;
+        this.senderID = senderID
+        this.selfAuthored = selfAuthored
     }
 
-    public MessageDataList(String description, int imgId) {
-        this.author = description;
-        this.imgId = imgId;
+    constructor(description: String, imgId: Int) {
+        author = description
+        this.imgId = imgId
     }
-    public String getAuthor() {
-        return author;
-    }
-
-    public boolean isMessagePreview() {
-        return messagePreview;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-    public int getImgId() {
-        return imgId;
-    }
-    public void setImgId(int imgId) {
-        this.imgId = imgId;
-    }
-
-    public String getDate() { return date; }
-    public Boolean getSelfAuthored() { return selfAuthored; }
-
-    public void setSelfAuthored(Boolean selfAuthored) {
-        this.selfAuthored = selfAuthored;
-    }
-
-    public String getSenderID() { return senderID; }
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public String getMessage() {return message; }
 }
