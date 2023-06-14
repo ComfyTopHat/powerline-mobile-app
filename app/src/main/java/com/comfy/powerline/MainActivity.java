@@ -1,16 +1,29 @@
 package com.comfy.powerline;
 
+import static android.content.ContentValues.TAG;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,6 +54,10 @@ String token = "";
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void saveFCMToken() {
+        api.saveFCMTokenToDB(token, String.valueOf(clientID));
     }
 
     private Thread getPOSTHTTPThread(Editable username, Editable password) {
@@ -95,6 +112,7 @@ String token = "";
         addToSharedPreferences("clientID", String.valueOf(clientID));
         intent.putExtra("jwt", jwt);
         intent.putExtra("user", user);
+        saveFCMToken();
         startActivity(intent);
         finish();
     }
@@ -111,7 +129,7 @@ String token = "";
         return prefs.getString(key, "-");
     }
 
-    public void getToken(View v) throws InterruptedException {
+    public void getToken(View v) throws InterruptedException, IOException {
         try {
             InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
