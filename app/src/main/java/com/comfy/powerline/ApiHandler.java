@@ -75,16 +75,17 @@ public class ApiHandler extends AppCompatActivity  {
                             Log.w(TAG, "Fetching FCM registration token failed", task.getException());
                             return;
                         }
-                        // Get new FCM registration token
-                        fcmToken = task.getResult();
-                        String payload = ("{\"clientID\":\"" + clientID + "\",\"fcmToken\":\"" + fcmToken + "\"}");
-                        //HttpURLConnection con = getPOSTHTTPConnection("fcm/", jwt);
-                        //sendData(con, payload);
+                        try {
+                            fcmToken = task.getResult();
+                            String payload = ("{\"clientID\":\"" + clientID + "\",\"fcmToken\":\"" + fcmToken + "\"}");
+                            HttpURLConnection con = getPOSTHTTPConnection("fcm/", jwt);
+                            sendData(con, payload);
+                        }
+                        catch (Exception e) {
 
+                        }
                     }
                 });
-
-
     }
 
     String getClientID(String username) throws InterruptedException {
@@ -271,6 +272,7 @@ public class ApiHandler extends AppCompatActivity  {
                 byte[] out = payload.getBytes(StandardCharsets.UTF_8);
                 OutputStream stream = con.getOutputStream();
                 stream.write(out);
+                stream.close();
                 strResponse = readResponseObject(con, String.class);
             } catch (Exception e) {
                 throw new RuntimeException(e);

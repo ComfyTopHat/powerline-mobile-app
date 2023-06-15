@@ -1,29 +1,16 @@
 package com.comfy.powerline;
 
-import static android.content.ContentValues.TAG;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,7 +35,7 @@ String token = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_login);
         try {
             getPowerlineVer();
         } catch (InterruptedException e) {
@@ -140,9 +127,6 @@ String token = "";
         EditText passwordInput = findViewById(R.id.passwordInput);
         Editable username = emailInput.getText();
         Editable password = passwordInput.getText();
-        //TODO: Remove this before committing
-        emailInput.setText("Comfy");
-        passwordInput.setText("Barber!123");
 
         Thread run = getPOSTHTTPThread(username, password);
         run.start();
