@@ -1,80 +1,71 @@
 package com.comfy.powerline;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.Editable;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 
 public class MainActivity extends AppCompatActivity {
 ApiHandler api = new ApiHandler();
+static String baseUrl = "https://powerline.azurewebsites.net/";
 int clientID = 0;
+private static final int NOTIFICATION_PERMISSION_CODE = 100;
 String version = "";
 String token = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_login);
         try {
             getPowerlineVer();
+
+            checkPermission(NOTIFICATION_PERMISSION_CODE);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Thread getPOSTHTTPThread(Editable username, Editable password) {
+    private void saveFCMToken() {
+        api.saveFCMTokenToDB(token, String.valueOf(clientID));
+    }
+
+    //TODO: Remove this and migrate to AppToolbox
+    private Thread loginAndSetTokenClientID(Editable username, Editable password) {
         Runnable httpThread = () -> {
             try {
-                URL url = new URL(baseUrl + "clients/login/");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
-                con.setDoOutput(true);
-                con.setRequestProperty("Content-Type", "application/json");
-                con.setRequestProperty("Accept", "application/json");
+                HttpURLConnection con = api.getPOSTHTTPConnection("clients/login/", "-");
                 String payload = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
-                byte[] out = payload.getBytes(StandardCharsets.UTF_8);
-                OutputStream stream = con.getOutputStream();
-                stream.write(out);
-                InputStream is = con.getInputStream();
-                BufferedReader bR = new BufferedReader( new InputStreamReader(is));
-                String line;
-                StringBuilder responseStrBuilder = new StringBuilder();
-                while((line =  bR.readLine()) != null){
-                    responseStrBuilder.append(line);
-                }
-                is.close();
-                JSONObject result = new JSONObject(responseStrBuilder.toString());
+                String response = api.sendData(con, payload);
+                JSONObject result = new JSONObject(response);
                 token = ((String) result.get("token"));
                 clientID = (int) result.get("clientID");
                 con.disconnect();
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException | JSONException e) {
                 TextView tv = findViewById(R.id.invalidInput);
-                tv.setText("Error communicating with server, please try again later");
+                tv.setText(R.string.error_communicating_with_server_please_try_again_later);
                 tv.setVisibility(View.VISIBLE);
                 throw new RuntimeException(e);
-            } catch (JSONException e) {
-                token = "Invalid login";
             }
         };
         return new Thread(httpThread);
@@ -89,12 +80,8 @@ String token = "";
 
     private void openSuccessfulLogin() {
         Intent intent = new Intent(MainActivity.this, MessagesMenu.class);
-        String jwt = getFromSharedPreferences("jwt");
-        EditText tv = findViewById(R.id.emailInput);
-        Editable user = tv.getText();
         addToSharedPreferences("clientID", String.valueOf(clientID));
-        intent.putExtra("jwt", jwt);
-        intent.putExtra("user", user);
+        saveFCMToken();
         startActivity(intent);
         finish();
     }
@@ -106,10 +93,6 @@ String token = "";
         editor.apply();
     }
 
-    private String getFromSharedPreferences(String key) {
-        SharedPreferences prefs = getSharedPreferences("AUTH", MODE_PRIVATE);
-        return prefs.getString(key, "-");
-    }
 
     public void getToken(View v) throws InterruptedException {
         try {
@@ -122,16 +105,13 @@ String token = "";
         EditText passwordInput = findViewById(R.id.passwordInput);
         Editable username = emailInput.getText();
         Editable password = passwordInput.getText();
-        //TODO: Remove this before committing
-        emailInput.setText("Comfy");
-        passwordInput.setText("Barber!123");
-
-        Thread run = getPOSTHTTPThread(username, password);
+        Thread run = loginAndSetTokenClientID(username, password);
         run.start();
         run.join();
         if (!Objects.equals(token, "Invalid login")){
             addToSharedPreferences("jwt",token);
-            addToSharedPreferences("user", String.valueOf(username));
+            //TODO: Remove this if its no longer used
+            //addToSharedPreferences("user", String.valueOf(username));
             openSuccessfulLogin();
         }
         else {
@@ -145,5 +125,19 @@ String token = "";
         startActivity(intent);
     }
 
-    static String baseUrl = "https://powerline.azurewebsites.net/";
+
+
+    // Function to check and request permission.
+    public void checkPermission(int requestCode)
+    {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
+            // Requesting the permission
+            ActivityCompat.requestPermissions(MainActivity.this, new String[] { Manifest.permission.POST_NOTIFICATIONS }, requestCode);
+        }
+        else {
+            Log.e("Powerline", "Notification permission already granted");
+        }
+    }
 }
+
+

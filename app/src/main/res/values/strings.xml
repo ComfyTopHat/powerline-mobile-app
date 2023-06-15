@@ -4,7 +4,7 @@
     <string name="title_activity_main_menu">MainMenu</string>
     <string name="tab_text_1">Contacts</string>
     <string name="tab_text_2">Groups</string>
-    <string name="title_activity_messages_menu">Messages</string>
+    <string name="title_activity_messages_menu">Messages (</string>
     <string name="create_an_account">Create an Account</string>
     <string name="password">Password:</string>
     <string name="confirm_password">Confirm Password:</string>
@@ -121,4 +121,5 @@
     <string name="title_activity_scrolling">ScrollingActivity</string>
     <string name="title_activity_contacts">Contacts</string>
     <string name="messages">Messages</string>
+    <string name="error_communicating_with_server_please_try_again_later">Error communicating with server, please try again later</string>
 </resources>

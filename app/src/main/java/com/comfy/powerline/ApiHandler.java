@@ -1,17 +1,23 @@
 package com.comfy.powerline;
 
+import static android.content.ContentValues.TAG;
 import static com.comfy.powerline.MainActivity.baseUrl;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
 import android.os.Build;
+import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.comfy.powerline.utils.ContactDataList;
 import com.comfy.powerline.utils.ConversationDataList;
 import com.comfy.powerline.utils.MessageDataList;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,6 +41,7 @@ public class ApiHandler extends AppCompatActivity  {
     List<ContactDataList> contactResponse;
     List<ConversationDataList> conversationDataList;
     volatile String strResponse;
+    String fcmToken;
     List<MessageDataList> messageResponse;
     String version;
     List<ContactDataList> getContacts(String clientID, String jwt) throws InterruptedException {
@@ -57,6 +64,28 @@ public class ApiHandler extends AppCompatActivity  {
         thread.start();
         thread.join();
         return contactResponse;
+    }
+
+    void saveFCMTokenToDB(String jwt, String clientID) {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(new OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+                            return;
+                        }
+                        try {
+                            fcmToken = task.getResult();
+                            String payload = ("{\"clientID\":\"" + clientID + "\",\"fcmToken\":\"" + fcmToken + "\"}");
+                            HttpURLConnection con = getPOSTHTTPConnection("fcm/", jwt);
+                            sendData(con, payload);
+                        }
+                        catch (Exception e) {
+
+                        }
+                    }
+                });
     }
 
     String getClientID(String username) throws InterruptedException {
@@ -233,16 +262,19 @@ public class ApiHandler extends AppCompatActivity  {
         con.setDoOutput(true);
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("Accept", "application/json");
-        con.setRequestProperty("Authorization", jwt);
+        if (!jwt.equals("-")) {
+            con.setRequestProperty("Authorization", jwt);
+        }
         return con;
     }
 
-    private String sendData(HttpURLConnection con, String payload) throws InterruptedException {
+    String sendData(HttpURLConnection con, String payload) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
                 byte[] out = payload.getBytes(StandardCharsets.UTF_8);
                 OutputStream stream = con.getOutputStream();
                 stream.write(out);
+                stream.close();
                 strResponse = readResponseObject(con, String.class);
             } catch (Exception e) {
                 throw new RuntimeException(e);
