@@ -262,11 +262,13 @@ public class ApiHandler extends AppCompatActivity  {
         con.setDoOutput(true);
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("Accept", "application/json");
-        con.setRequestProperty("Authorization", jwt);
+        if (!jwt.equals("-")) {
+            con.setRequestProperty("Authorization", jwt);
+        }
         return con;
     }
 
-    private String sendData(HttpURLConnection con, String payload) throws InterruptedException {
+    String sendData(HttpURLConnection con, String payload) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
                 byte[] out = payload.getBytes(StandardCharsets.UTF_8);
