@@ -1,16 +1,21 @@
 package com.comfy.powerline;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.Editable;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,7 +33,9 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 ApiHandler api = new ApiHandler();
+static String baseUrl = "https://powerline.azurewebsites.net/";
 int clientID = 0;
+    private static final int NOTIFICATION_PERMISSION_CODE = 100;
 String version = "";
 String token = "";
 
@@ -38,6 +45,8 @@ String token = "";
         setContentView(R.layout.activity_login);
         try {
             getPowerlineVer();
+
+            checkPermission(NOTIFICATION_PERMISSION_CODE);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -47,6 +56,7 @@ String token = "";
         api.saveFCMTokenToDB(token, String.valueOf(clientID));
     }
 
+    //TODO: Remove this and migrate to AppToolbox
     private Thread getPOSTHTTPThread(Editable username, Editable password) {
         Runnable httpThread = () -> {
             try {
@@ -147,5 +157,19 @@ String token = "";
         startActivity(intent);
     }
 
-    static String baseUrl = "https://powerline.azurewebsites.net/";
+
+
+    // Function to check and request permission.
+    public void checkPermission(int requestCode)
+    {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
+            // Requesting the permission
+            ActivityCompat.requestPermissions(MainActivity.this, new String[] { Manifest.permission.POST_NOTIFICATIONS }, requestCode);
+        }
+        else {
+            Log.e("Powerline", "Notification permission already granted");
+        }
+    }
 }
+
+
