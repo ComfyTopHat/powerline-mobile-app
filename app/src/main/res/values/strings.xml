@@ -122,4 +122,5 @@
     <string name="title_activity_contacts">Contacts</string>
     <string name="messages">Messages</string>
     <string name="error_communicating_with_server_please_try_again_later">Error communicating with server, please try again later</string>
+    <string name="title_activity_messages_menu_v2">MessagesMenuV2</string>
 </resources>

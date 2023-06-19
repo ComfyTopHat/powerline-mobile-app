@@ -125,6 +125,10 @@ String token = "";
         startActivity(intent);
     }
 
+    public void testActivity(View view) {
+        Intent intent = new Intent(MainActivity.this, MessagesMenuV2.class);
+        startActivity(intent);
+    }
 
 
     // Function to check and request permission.
