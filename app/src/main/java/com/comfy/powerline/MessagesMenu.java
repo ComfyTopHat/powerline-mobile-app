@@ -30,24 +30,24 @@ public class MessagesMenu extends AppCompatActivity implements SearchView.OnQuer
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages_menu);
         try {
-            conversations = getMessageThreads();
+         //   conversations = getMessageThreads();
             setRecyclerView(conversations);
-        } catch (JSONException | InterruptedException e) {
+        } catch (JSONException e) {
             throw new RuntimeException(e);
         }
         editSearch = findViewById(R.id.message_search_view);
         editSearch.setOnQueryTextListener(this);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private List<ConversationDataList> getMessageThreads() throws InterruptedException {
-        ApiHandler api = new ApiHandler();
-        return(api.getLatestMessageThreads(getClientID(), getToken()));
-    }
+    //@RequiresApi(api = Build.VERSION_CODES.O)
+    //private List<ConversationDataList> getMessageThreads() throws InterruptedException {
+        //ApiHandler api = new ApiHandler();
+        //return(api.getLatestMessageThreads(getToken()));
+    //}
 
 
     protected String getToken() {
-        return "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
+        return getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
     }
 
     protected String getClientID() {

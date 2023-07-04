@@ -33,7 +33,7 @@ public class MessageThread extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message_thread);
         TextView tv = findViewById(R.id.contactName);
-        jwt = "Bearer " + getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
+        jwt = getSharedPreferences("AUTH", MODE_PRIVATE).getString("jwt", "-");
         clientID = getSharedPreferences("AUTH", MODE_PRIVATE).getString("clientID", "-");
         senderID = getIntent().getStringExtra("senderID");
         deleteSharedPreferences("contact");
@@ -60,7 +60,7 @@ public class MessageThread extends AppCompatActivity {
     public void sendMessage(View v) throws InterruptedException, IOException {
         EditText et = findViewById(R.id.messageInput);
         String messageText = String.valueOf(et.getText());
-        api.sendMessage(jwt, clientID, senderID, messageText);
+        api.sendMessage(jwt, senderID, messageText);
         // After the message is sent, populate a local copy and notify the adapter
         // When the user reloads the activity then it will pull the server-side version
         RecyclerView rv = findViewById(R.id.message_thread_recycler);

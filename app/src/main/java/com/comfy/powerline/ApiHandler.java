@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.comfy.powerline.data.Conversation;
 import com.comfy.powerline.utils.ContactDataList;
 import com.comfy.powerline.utils.ConversationDataList;
 import com.comfy.powerline.utils.MessageDataList;
@@ -39,7 +40,7 @@ import java.util.List;
 
 public class ApiHandler extends AppCompatActivity  {
     List<ContactDataList> contactResponse;
-    List<ConversationDataList> conversationDataList;
+    ArrayList<Conversation> conversationDataList;
     volatile String strResponse;
     String fcmToken;
     List<MessageDataList> messageResponse;
@@ -66,7 +67,7 @@ public class ApiHandler extends AppCompatActivity  {
         return contactResponse;
     }
 
-    void saveFCMTokenToDB(String jwt, String clientID) {
+    void saveFCMTokenToDB(String jwt) {
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(new OnCompleteListener<String>() {
                     @Override
@@ -77,7 +78,7 @@ public class ApiHandler extends AppCompatActivity  {
                         }
                         try {
                             fcmToken = task.getResult();
-                            String payload = ("{\"clientID\":\"" + clientID + "\",\"fcmToken\":\"" + fcmToken + "\"}");
+                            String payload = ("{\"fcmToken\":\"" + fcmToken + "\"}");
                             HttpURLConnection con = getPOSTHTTPConnection("fcm/", jwt);
                             sendData(con, payload);
                         }
@@ -115,17 +116,17 @@ public class ApiHandler extends AppCompatActivity  {
     }
 
 
-     @RequiresApi(api = Build.VERSION_CODES.O)
-     List<ConversationDataList> getLatestMessageThreads(String clientID, String jwt) throws InterruptedException {
-         Thread thread = new Thread(() -> {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    ArrayList<Conversation> getLatestMessageThreads(String jwt) throws InterruptedException {
+        Thread thread = new Thread(() -> {
             try {
-                URL url = new URL(baseUrl + "contacts/get/thread/{recipient_id}?recipientID=" + clientID);
+                URL url = new URL(baseUrl + "contacts/get/thread/{recipient_id}");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setRequestMethod("GET");
                 con.setRequestProperty("Accept", "application/json");
                 con.setRequestProperty("Authorization", jwt);
                 JSONArray result = readResponseObject(con, JSONArray.class);
-                conversationDataList = jsonArrayToConversationDataList(clientID, result);
+                conversationDataList = convertJSONArrayToComposeConversationList(result);
             } catch (IOException | JSONException e) {
                 throw new RuntimeException(e);
             }
@@ -133,6 +134,22 @@ public class ApiHandler extends AppCompatActivity  {
         thread.start();
         thread.join();
         return conversationDataList;
+    }
+
+
+    ArrayList<Conversation> convertJSONArrayToComposeConversationList(JSONArray resultList) throws JSONException {
+        ArrayList<Conversation> conversationList = new ArrayList<>();
+        for (int i=0; i < resultList.length(); i++) {
+            Conversation newConversation = new Conversation(
+                    resultList.getJSONObject(i).getString("senderName"),
+                    resultList.getJSONObject(i).getInt("senderID"),
+                    resultList.getJSONObject(i).getInt("recipientID"),
+                    resultList.getJSONObject(i).getString("text"),
+                    resultList.getJSONObject(i).getString("timestamp"),
+                    resultList.getJSONObject(i).getString("recipientName"));
+            conversationList.add(newConversation);
+        }
+        return conversationList;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -185,7 +202,7 @@ public class ApiHandler extends AppCompatActivity  {
         }
         return displayedTimestamp;
     }
-    
+
     private List<MessageDataList> jsonArrayToMessageThreadDataList(JSONArray ja, String clientID) throws JSONException {
         List<MessageDataList> dataList = new ArrayList<>();
         boolean selfAuthored;
@@ -283,11 +300,11 @@ public class ApiHandler extends AppCompatActivity  {
         thread.start();
         thread.join();
         return strResponse;
-        }
+    }
 
 
-    public void sendMessage(String jwt, String senderID, String recipientID, String text) throws IOException, InterruptedException {
-        String payload = ("{\"senderID\":\"" + senderID + "\",\"recipientID\":\"" + recipientID + "\",\"text\":\"" + text + "\"}");
+    public void sendMessage(String jwt, String recipientID, String text) throws IOException, InterruptedException {
+        String payload = ("{\"recipientID\":\"" + recipientID + "\",\"text\":\"" + text + "\"}");
         HttpURLConnection con = getPOSTHTTPConnection("clients/messages/send", jwt);
         sendData(con, payload);
     }
@@ -297,10 +314,10 @@ public class ApiHandler extends AppCompatActivity  {
             try {
                 String payload;
                 if (filterID.equals("NONE")) {
-                    payload = "{\"clientID\":\"" + clientID + "\"}";
+                    payload = "{}";
                 }
                 else {
-                    payload = "{\"clientID\":\"" + clientID + "\",\"filterID\":\"" + filterID + "\"}";
+                    payload = "{\"filterID\":\"" + filterID + "\"}";
                 }
                 HttpURLConnection con = getPOSTHTTPConnection("clients/messages/", jwt);
                 String response = sendData(con, payload);

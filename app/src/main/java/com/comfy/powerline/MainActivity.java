@@ -17,6 +17,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.comfy.powerline.data.SharedPreferencesHelper;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,7 +29,7 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 ApiHandler api = new ApiHandler();
-static String baseUrl = "https://powerline.azurewebsites.net/";
+static String baseUrl = "https://powerline-app.com/";
 int clientID = 0;
 private static final int NOTIFICATION_PERMISSION_CODE = 100;
 String version = "";
@@ -47,7 +49,7 @@ String token = "";
     }
 
     private void saveFCMToken() {
-        api.saveFCMTokenToDB(token, String.valueOf(clientID));
+        api.saveFCMTokenToDB("Bearer " + token);
     }
 
     //TODO: Remove this and migrate to AppToolbox
@@ -79,18 +81,16 @@ String token = "";
     }
 
     private void openSuccessfulLogin() {
-        Intent intent = new Intent(MainActivity.this, MessagesMenu.class);
-        addToSharedPreferences("clientID", String.valueOf(clientID));
         saveFCMToken();
+        Intent intent = new Intent(MainActivity.this, MessagesMenuV2.class);
         startActivity(intent);
         finish();
     }
 
     @SuppressLint("CommitPrefEdits")
     protected void addToSharedPreferences(String name, String value) {
-        SharedPreferences.Editor editor = getSharedPreferences("AUTH", MODE_PRIVATE).edit();
-        editor.putString(name, value);
-        editor.apply();
+        SharedPreferencesHelper sph = new SharedPreferencesHelper(this);
+        sph.SavePreferences(name, value);
     }
 
 
@@ -109,9 +109,8 @@ String token = "";
         run.start();
         run.join();
         if (!Objects.equals(token, "Invalid login")){
-            addToSharedPreferences("jwt",token);
-            //TODO: Remove this if its no longer used
-            //addToSharedPreferences("user", String.valueOf(username));
+            addToSharedPreferences("jwt","Bearer " + token);
+            addToSharedPreferences("clientID", String.valueOf(clientID));
             openSuccessfulLogin();
         }
         else {
