@@ -51,7 +51,7 @@ SearchView editSearch;
     }
 
     public void switchToSendMessage(View v) {
-        Intent intent = new Intent(Contacts.this, sendMessage_v1.class);
+        Intent intent = new Intent(Contacts.this, MessageThread.class);
         intent.putExtra("contacts", (CharSequence) contacts);
         startActivity(intent);
     }

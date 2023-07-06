@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.comfy.powerline.data.Conversation;
 import com.comfy.powerline.utils.ContactDataList;
-import com.comfy.powerline.utils.ConversationDataList;
 import com.comfy.powerline.utils.MessageDataList;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -115,7 +114,6 @@ public class ApiHandler extends AppCompatActivity  {
         return strResponse;
     }
 
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     ArrayList<Conversation> getLatestMessageThreads(String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
@@ -140,43 +138,23 @@ public class ApiHandler extends AppCompatActivity  {
     ArrayList<Conversation> convertJSONArrayToComposeConversationList(JSONArray resultList) throws JSONException {
         ArrayList<Conversation> conversationList = new ArrayList<>();
         for (int i=0; i < resultList.length(); i++) {
-            Conversation newConversation = new Conversation(
-                    resultList.getJSONObject(i).getString("senderName"),
-                    resultList.getJSONObject(i).getInt("senderID"),
-                    resultList.getJSONObject(i).getInt("recipientID"),
-                    resultList.getJSONObject(i).getString("text"),
-                    resultList.getJSONObject(i).getString("timestamp"),
-                    resultList.getJSONObject(i).getString("recipientName"));
-            conversationList.add(newConversation);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                LocalDateTime dateTime = LocalDateTime.parse(resultList.getJSONObject(i).getString("timestamp"));
+                Conversation newConversation = new Conversation(
+                        resultList.getJSONObject(i).getString("senderName"),
+                        resultList.getJSONObject(i).getInt("senderID"),
+                        resultList.getJSONObject(i).getInt("recipientID"),
+                        resultList.getJSONObject(i).getString("text"),
+                        formatTimeStamp(dateTime),
+                        resultList.getJSONObject(i).getString("recipientName"));
+                conversationList.add(newConversation);
+            }
+
         }
         return conversationList;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private List<ConversationDataList> jsonArrayToConversationDataList(String clientID, JSONArray ja) throws JSONException {
-        List<ConversationDataList> conversationDataLists = new ArrayList<>();
-        for (int i =0; i < ja.length(); i++) {
-            LocalDateTime dateTime = LocalDateTime.parse(ja.getJSONObject(i).getString("timestamp"));
-            String formattedDateTime = formatTimeStamp(dateTime);
-            String sender = ja.getJSONObject(i).getString("senderName");
-            String contactID = ja.getJSONObject(i).getString("senderID");
-            String text = ja.getJSONObject(i).getString("text");
-            String recipientName = ja.getJSONObject(i).getString("recipientName");
-            String recipientID = ja.getJSONObject(i).getString("recipientID");
-
-            //
-            if (!recipientID.equals(clientID)) {
-                contactID = recipientID;
-            }
-            else {
-                recipientName = sender;
-            }
-            conversationDataLists.add(new ConversationDataList(recipientName, contactID, text, formattedDateTime, 0));
-        }
-        return conversationDataLists;
-    }
-
-    private String formatTimeStamp(LocalDateTime messageDateTime) {
+    private static String formatTimeStamp(LocalDateTime messageDateTime) {
         String displayedTimestamp = "";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             DayOfWeek DoW = LocalDate.now().getDayOfWeek();
