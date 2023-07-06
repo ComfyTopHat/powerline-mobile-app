@@ -1,5 +1,6 @@
 package com.comfy.powerline
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources.Theme
 import android.os.Build
@@ -23,11 +24,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -62,20 +67,58 @@ class MessagesMenuV2 : ComponentActivity() {
         val api = ApiHandler()
         messagesList = api.getLatestMessageThreads(jwt)
         setContent {
-            PowerlineTheme(darkTheme = false) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Messages1()
-                }
-            }
+            MessagesScaffold()
         }
     }
 }
 
 private lateinit var messagesList: ArrayList<Conversation>
+
+@RequiresApi(Build.VERSION_CODES.O)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MessagesScaffold() {
+    Scaffold(
+        topBar = {
+            TopAppBar(colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = BluePrimary),
+                title = { Text(
+                text = "Messages",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = Color.White
+            ) },
+                navigationIcon = {
+                    IconButton(onClick = {
+                       // Toast.makeText(context, "Nav Button", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "Go back",
+                        )
+                    }
+                })
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                containerColor = BluePrimary,
+                onClick = { /*TODO*/ },
+                content = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_person_24),
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
+            )
+        },
+        content = {
+                Column {
+                    Messages1()
+                }
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,9 +157,7 @@ fun Messages1() {
     }
 
     if (listPrepared) {
-
         TopAppbarMessages()
-
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -141,7 +182,6 @@ fun MessagesItemStyle(
     item: Conversation,
     context: Context = LocalContext.current.applicationContext
 ) {
-
     Box(
         modifier = Modifier
             .clickable(
