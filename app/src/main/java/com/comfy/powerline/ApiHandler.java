@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.comfy.powerline.data.Conversation;
+import com.comfy.powerline.data.Message;
 import com.comfy.powerline.utils.ContactDataList;
 import com.comfy.powerline.utils.MessageDataList;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -42,7 +43,7 @@ public class ApiHandler extends AppCompatActivity  {
     ArrayList<Conversation> conversationDataList;
     volatile String strResponse;
     String fcmToken;
-    List<MessageDataList> messageResponse;
+    List<Message> messageResponse;
     String version;
     List<ContactDataList> getContacts(String clientID, String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
@@ -149,7 +150,6 @@ public class ApiHandler extends AppCompatActivity  {
                         resultList.getJSONObject(i).getString("recipientName"));
                 conversationList.add(newConversation);
             }
-
         }
         return conversationList;
     }
@@ -287,7 +287,7 @@ public class ApiHandler extends AppCompatActivity  {
         sendData(con, payload);
     }
 
-    List<MessageDataList> getThreadMessages(String clientID, String filterID, String jwt) throws InterruptedException {
+    List<Message> getThreadMessages(String filterID, String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
                 String payload;
@@ -300,7 +300,7 @@ public class ApiHandler extends AppCompatActivity  {
                 HttpURLConnection con = getPOSTHTTPConnection("clients/messages/", jwt);
                 String response = sendData(con, payload);
                 JSONArray result = new JSONArray(response);
-                messageResponse = jsonArrayToMessageThreadDataList(result, clientID);
+                messageResponse = convertJSONArrayToComposeMessageList(result);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } catch (JSONException | InterruptedException ignored) {
@@ -309,5 +309,25 @@ public class ApiHandler extends AppCompatActivity  {
         thread.start();
         thread.join();
         return messageResponse;
+    }
+
+    ArrayList<Message> convertJSONArrayToComposeMessageList(JSONArray resultList) throws JSONException {
+        ArrayList<Message> messageList = new ArrayList<>();
+        for (int i=0; i < resultList.length(); i++) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+               // LocalDateTime dateTime = LocalDateTime.parse(resultList.getJSONObject(i).getString("timestamp"));
+                Message newMessage = new Message(
+                        resultList.getJSONObject(i).getString("senderName"),
+                        resultList.getJSONObject(i).getInt("senderID"),
+                        resultList.getJSONObject(i).getInt("recipientID"),
+                        resultList.getJSONObject(i).getString("text"),
+                        resultList.getJSONObject(i).getString("timestamp"),
+                        null,
+                        resultList.getJSONObject(i).getBoolean("selfAuthored")
+                      );
+                messageList.add(newMessage);
+            }
+        }
+        return messageList;
     }
 }

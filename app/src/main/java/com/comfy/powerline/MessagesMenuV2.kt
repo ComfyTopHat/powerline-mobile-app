@@ -2,6 +2,7 @@ package com.comfy.powerline
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.res.Resources.Theme
 import android.os.Build
 import android.os.Bundle
@@ -53,6 +54,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import com.comfy.powerline.data.Conversation
 import com.comfy.powerline.ui.theme.BluePrimary
 import com.comfy.powerline.ui.theme.PowerlineTheme
@@ -180,13 +182,14 @@ fun Messages1() {
 @Composable
 fun MessagesItemStyle(
     item: Conversation,
-    context: Context = LocalContext.current.applicationContext
+    context: Context = LocalContext.current
 ) {
     Box(
         modifier = Modifier
             .clickable(
                 onClick = {
-                    Toast.makeText(context, item.senderName, Toast.LENGTH_SHORT).show()
+                    context.startActivity(Intent(context, MessageThreadV2::class.java))
+                    //Toast.makeText(context, item.senderName, Toast.LENGTH_SHORT).show()
                 }
             )
     ) {
@@ -241,7 +244,6 @@ fun MessagesItemStyle(
                     )
 
                 }
-
                 // Text that shows the message
                 Text(
                     modifier = Modifier

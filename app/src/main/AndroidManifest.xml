@@ -20,7 +20,11 @@
             android:exported="false"
             android:label="@string/title_activity_messages_menu_v2"
             android:theme="@style/Theme.Powerline" />
-
+        <activity
+            android:name=".MessageThreadV2"
+            android:exported="false"
+            android:label="@string/title_activity_messages_menu_v2"
+            android:theme="@style/Theme.Powerline" />
         <service
             android:name=".PushNotificationService"
             android:enabled="true"

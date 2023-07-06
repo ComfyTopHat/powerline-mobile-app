@@ -49,7 +49,7 @@ public class MessageThread extends AppCompatActivity {
                 senderID = api.getClientID(contactExtra);
             }
             tv.setText(contactExtra);
-            messageThread = api.getThreadMessages(clientID, senderID, jwt);
+         //   messageThread = api.getThreadMessages(clientID, senderID, jwt);
         } catch (Exception e) {
             // TODO: Display error for invalid message return
         }
