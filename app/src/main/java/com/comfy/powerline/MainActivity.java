@@ -16,6 +16,15 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.datastore.preferences.core.MutablePreferences;
+import androidx.datastore.preferences.core.Preferences;
+import androidx.datastore.preferences.core.PreferencesKeys;
+import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder;
+import androidx.datastore.rxjava3.RxDataStore;
+
+import com.comfy.powerline.data.SharedPreferencesHelper;
+import com.comfy.powerline.utils.AppToolBox;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,17 +33,22 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Objects;
 
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
+
 
 public class MainActivity extends AppCompatActivity {
 ApiHandler api = new ApiHandler();
-static String baseUrl = "https://powerline.azurewebsites.net/";
+static String baseUrl = "https://powerline-app.com/";
 int clientID = 0;
 private static final int NOTIFICATION_PERMISSION_CODE = 100;
 String version = "";
 String token = "";
+RxDataStore<Preferences> dataStoreRX;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        dataStoreRX = new RxPreferenceDataStoreBuilder(this,"auth").build(); //onCreate
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         try {
@@ -47,7 +61,7 @@ String token = "";
     }
 
     private void saveFCMToken() {
-        api.saveFCMTokenToDB(token, String.valueOf(clientID));
+        api.saveFCMTokenToDB("Bearer " + token);
     }
 
     //TODO: Remove this and migrate to AppToolbox
@@ -79,18 +93,20 @@ String token = "";
     }
 
     private void openSuccessfulLogin() {
-        Intent intent = new Intent(MainActivity.this, MessagesMenu.class);
-        addToSharedPreferences("clientID", String.valueOf(clientID));
         saveFCMToken();
+        AppToolBox ap = new AppToolBox();
+        //ap.saveJWTToPreferencesStore("ABC");
+        Intent intent = new Intent(MainActivity.this, MessagesMenuV2.class);
         startActivity(intent);
         finish();
     }
 
+
+
     @SuppressLint("CommitPrefEdits")
     protected void addToSharedPreferences(String name, String value) {
-        SharedPreferences.Editor editor = getSharedPreferences("AUTH", MODE_PRIVATE).edit();
-        editor.putString(name, value);
-        editor.apply();
+        SharedPreferencesHelper sph = new SharedPreferencesHelper(this);
+        sph.SavePreferences(name, value);
     }
 
 
@@ -109,9 +125,8 @@ String token = "";
         run.start();
         run.join();
         if (!Objects.equals(token, "Invalid login")){
-            addToSharedPreferences("jwt",token);
-            //TODO: Remove this if its no longer used
-            //addToSharedPreferences("user", String.valueOf(username));
+            addToSharedPreferences("jwt","Bearer " + token);
+            addToSharedPreferences("clientID", String.valueOf(clientID));
             openSuccessfulLogin();
         }
         else {
@@ -125,6 +140,10 @@ String token = "";
         startActivity(intent);
     }
 
+    public void testActivity(View view) {
+        Intent intent = new Intent(MainActivity.this, MessagesMenuV2.class);
+        startActivity(intent);
+    }
 
 
     // Function to check and request permission.

@@ -27,7 +27,7 @@ public class PushNotificationService extends FirebaseMessagingService {
         String notificationAuthor = decodeMessage(remoteMessage, "author");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel =
-            new NotificationChannel(CHANNEL_ID, "Heads Up Notification", NotificationManager.IMPORTANCE_HIGH);
+                    new NotificationChannel(CHANNEL_ID, "Heads Up Notification", NotificationManager.IMPORTANCE_HIGH);
             getSystemService(NotificationManager.class).createNotificationChannel(channel);
             Notification.Builder notification = new Notification.Builder(this, CHANNEL_ID)
                     .setContentTitle(notificationAuthor)
