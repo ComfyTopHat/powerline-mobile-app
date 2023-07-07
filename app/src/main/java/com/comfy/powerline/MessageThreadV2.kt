@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.MutableTransitionState
@@ -61,10 +60,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -97,14 +98,17 @@ enum class InputSelector {
 }
 
 class MessageThreadV2 : AppCompatActivity() {
+    val jwt =
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODkxMzI1NDgsImlhdCI6MTY4ODUyNzc0OCwic3ViIjoiQ29tZnkiLCJ1aWQiOjF9.g38E3_16ZxRAfMEcUJzhwnsrsFb3sQp-A7Tmti1DnEM"
+    val api = ApiHandler()
+
+    private val _messages: MutableList<Message> = api.getThreadMessages("2", jwt).toMutableStateList()
+    
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val jwt =
-            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODkxMzI1NDgsImlhdCI6MTY4ODUyNzc0OCwic3ViIjoiQ29tZnkiLCJ1aWQiOjF9.g38E3_16ZxRAfMEcUJzhwnsrsFb3sQp-A7Tmti1DnEM"
-        val api = ApiHandler()
         setContent {
             Scaffold(topBar = {
                 TopAppBar(colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = BluePrimary),
@@ -131,11 +135,12 @@ class MessageThreadV2 : AppCompatActivity() {
                         Modifier
                             .fillMaxSize()
                             .padding(paddingValues)) {
-                        Thread(messages = api.getThreadMessages("2", jwt))
+                        Thread(messages = _messages)
 
                     }
                 },
                 bottomBar = {UserInput()}
+
             )
         }
     }
@@ -361,7 +366,11 @@ class MessageThreadV2 : AppCompatActivity() {
                     onSelectorChange = { currentInputSelector = it },
                     sendMessageEnabled = textState.text.isNotBlank(),
                     onMessageSent = {
-                       // onMessageSent(textState.text)
+                        // TODO: Update this to dynamic values
+                        api.sendMessage(jwt, "2", textState.text)
+                        // TODO: Update this to dynamic values
+                        val newMessage = Message("", 1, 2, textState.text, "", null, true)
+                        _messages.add(newMessage)
                         // Reset text field and close keyboard
                         textState = TextFieldValue()
                         // Move scroll to bottom
@@ -534,6 +543,4 @@ class MessageThreadV2 : AppCompatActivity() {
             )
         }
     }
-
-
 }

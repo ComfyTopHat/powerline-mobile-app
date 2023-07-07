@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.comfy.powerline.data.Conversation;
 import com.comfy.powerline.data.Message;
 import com.comfy.powerline.utils.ContactDataList;
-import com.comfy.powerline.utils.MessageDataList;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -89,32 +88,6 @@ public class ApiHandler extends AppCompatActivity  {
                 });
     }
 
-    String getClientID(String username) throws InterruptedException {
-        Thread thread = new Thread(() -> {
-            try {
-                try {
-                    URL url = new URL(baseUrl + "/clients/get/clientID/" + username);
-                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setRequestMethod("GET");
-                    JSONObject result = readResponseObject(con, JSONObject.class);
-                    if (result.getString("status").equals("success")) {
-                        strResponse = result.getString("clientID");
-                    }
-                    else {
-                        strResponse = "0";
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        thread.start();
-        thread.join();
-        return strResponse;
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     ArrayList<Conversation> getLatestMessageThreads(String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
@@ -181,20 +154,6 @@ public class ApiHandler extends AppCompatActivity  {
         return displayedTimestamp;
     }
 
-    private List<MessageDataList> jsonArrayToMessageThreadDataList(JSONArray ja, String clientID) throws JSONException {
-        List<MessageDataList> dataList = new ArrayList<>();
-        boolean selfAuthored;
-        for (int i =0; i < ja.length(); i++) {
-            String date = ja.getJSONObject(i).getString("timestamp");
-            String sender = ja.getJSONObject(i).getString("senderName");
-            String text = ja.getJSONObject(i).getString("text");
-            String senderID = ja.getJSONObject(i).getString("senderID");
-            date = date.substring(0, (date.length() - 10));
-            selfAuthored = senderID.equals(clientID);
-            dataList.add(i, new MessageDataList(sender, text, android.R.drawable.ic_dialog_info, date, senderID, selfAuthored, false));
-        }
-        return dataList;
-    }
 
 
     private List<ContactDataList> jsonArrayToContactDataList(JSONArray ja) throws JSONException {
