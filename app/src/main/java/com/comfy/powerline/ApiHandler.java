@@ -12,9 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.comfy.powerline.data.Contact;
 import com.comfy.powerline.data.Conversation;
 import com.comfy.powerline.data.Message;
-import com.comfy.powerline.utils.ContactDataList;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -38,23 +38,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ApiHandler extends AppCompatActivity  {
-    List<ContactDataList> contactResponse;
+    ArrayList<Contact> contactResponse;
     ArrayList<Conversation> conversationDataList;
     volatile String strResponse;
     String fcmToken;
     List<Message> messageResponse;
     String version;
-    List<ContactDataList> getContacts(String clientID, String jwt) throws InterruptedException {
+    ArrayList<Contact> getContacts(String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
                 try {
-                    URL url = new URL(baseUrl + "contacts/get/{recipient_id}?recipientID=" + clientID);
+                    URL url = new URL(baseUrl + "contacts/get/{recipient_id}");
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.setRequestMethod("GET");
                     con.setRequestProperty("Authorization", jwt);
                     JSONArray result = readResponseObject(con, JSONArray.class);
-                    contactResponse = jsonArrayToContactDataList(result);
-                } catch (IOException e) {
+                    contactResponse = convertJSONArrayToComposeContactList(result);
+              } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             } catch (Exception e) {
@@ -66,24 +66,34 @@ public class ApiHandler extends AppCompatActivity  {
         return contactResponse;
     }
 
+    ArrayList<Contact> convertJSONArrayToComposeContactList(JSONArray resultList) throws JSONException {
+        ArrayList<Contact> contactList = new ArrayList<>();
+        for (int i=0; i < resultList.length(); i++) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                Contact newContact = new Contact(
+                        resultList.getJSONObject(i).getString("name"),
+                        resultList.getJSONObject(i).getInt("contactID"));
+                contactList.add(newContact);
+            }
+        }
+        return contactList;
+    }
+
     void saveFCMTokenToDB(String jwt) {
         FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(new OnCompleteListener<String>() {
-                    @Override
-                    public void onComplete(@NonNull Task<String> task) {
-                        if (!task.isSuccessful()) {
-                            Log.w(TAG, "Fetching FCM registration token failed", task.getException());
-                            return;
-                        }
-                        try {
-                            fcmToken = task.getResult();
-                            String payload = ("{\"fcmToken\":\"" + fcmToken + "\"}");
-                            HttpURLConnection con = getPOSTHTTPConnection("fcm/", jwt);
-                            sendData(con, payload);
-                        }
-                        catch (Exception e) {
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+                        return;
+                    }
+                    try {
+                        fcmToken = task.getResult();
+                        String payload = ("{\"fcmToken\":\"" + fcmToken + "\"}");
+                        HttpURLConnection con = getPOSTHTTPConnection("fcm/", jwt);
+                        sendData(con, payload);
+                    }
+                    catch (Exception e) {
 
-                        }
                     }
                 });
     }
@@ -127,6 +137,14 @@ public class ApiHandler extends AppCompatActivity  {
         return conversationList;
     }
 
+    public Boolean verifyClientExists(String client, String jwt) throws IOException, InterruptedException, JSONException {
+        HttpURLConnection con = getPOSTHTTPConnection("clients/get/clientID/?username=" + (client), jwt);
+        String exists = sendData(con, "");
+        System.out.print(exists);
+        JSONObject responseObj = new JSONObject(exists);
+        return responseObj.getString("status").contains("success");
+    }
+
     private static String formatTimeStamp(LocalDateTime messageDateTime) {
         String displayedTimestamp = "";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -152,19 +170,6 @@ public class ApiHandler extends AppCompatActivity  {
             }
         }
         return displayedTimestamp;
-    }
-
-
-
-    private List<ContactDataList> jsonArrayToContactDataList(JSONArray ja) throws JSONException {
-        List<ContactDataList> dataList = new ArrayList<>();
-        for (int i = 0; i < ja.length(); i++) {
-            JSONObject jo = ja.getJSONObject(i);
-            String name = jo.getString("name");
-            String contactID = jo.getString("contactID");
-            dataList.add(i, new ContactDataList(name, R.drawable.baseline_person_24, contactID));
-        }
-        return dataList;
     }
 
     private <T> T readResponseObject(HttpURLConnection con, Class<T> target) throws IOException, JSONException {
@@ -209,7 +214,7 @@ public class ApiHandler extends AppCompatActivity  {
         thread.join();
     }
 
-    HttpURLConnection getPOSTHTTPConnection(String func, String jwt) throws IOException {
+    public HttpURLConnection getPOSTHTTPConnection(String func, String jwt) throws IOException {
         URL url = new URL(baseUrl + func);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
@@ -222,7 +227,7 @@ public class ApiHandler extends AppCompatActivity  {
         return con;
     }
 
-    String sendData(HttpURLConnection con, String payload) throws InterruptedException {
+    public String sendData(HttpURLConnection con, String payload) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
                 byte[] out = payload.getBytes(StandardCharsets.UTF_8);

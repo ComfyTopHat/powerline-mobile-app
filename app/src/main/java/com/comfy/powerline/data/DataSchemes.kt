@@ -10,6 +10,9 @@ data class Conversation(val senderName : String,
                         val timestamp : String,
                         val recipientName : String)
 
+data class Contact(val contactName : String,
+                        val contactID : Int)
+
 @Immutable
 data class Message(
     val senderName: String,

@@ -1,13 +1,9 @@
-package com.comfy.powerline
+package com.comfy.powerline.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.Bundle
-import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -23,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -48,94 +45,71 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.startActivity
-import com.comfy.powerline.data.Conversation
-import com.comfy.powerline.ui.PLTopAppBar
+import com.comfy.powerline.CreateContactActivity
+import com.comfy.powerline.MessageThreadV2
+import com.comfy.powerline.R
+import com.comfy.powerline.TopAppbarMessages
+import com.comfy.powerline.data.Contact
 import com.comfy.powerline.ui.theme.BluePrimary
-import com.comfy.powerline.utils.AppToolBox
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class MessagesMenuV2 : ComponentActivity() {
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val api = ApiHandler()
-        val appToolBox = AppToolBox(applicationContext)
-        val token = appToolBox.retrieveJWT()
-        messagesList = api.getLatestMessageThreads(token)
-        setContent {
-            MessagesScaffold()
-        }
-    }
-}
-
-
-
-private lateinit var messagesList: ArrayList<Conversation>
-
-@RequiresApi(Build.VERSION_CODES.O)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MessagesScaffold(
-    context: Context = LocalContext.current) {
-    Scaffold(
-        topBar = {
-            PLTopAppBar(title = "Messages")
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                containerColor = BluePrimary,
-                onClick = { context.startActivity(Intent(context, ContactsActivity::class.java)) },
-                content = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_person_24),
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                }
-            )
-        },
-        content = {
-                Column {
-                    Messages1()
-                }
-        }
-    )
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppbarMessages(context: Context = LocalContext.current.applicationContext) {
-    TopAppBar(
-        colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = BluePrimary),
-        title = {
-            Text(
-                text = "Messages",
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = Color.White
-            )
-        },
+fun PLTopAppBar(title : String) {
+    TopAppBar(colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = BluePrimary),
+        title = { Text(
+            text = title,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = Color.White
+        ) },
         navigationIcon = {
             IconButton(onClick = {
-                Toast.makeText(context, "Nav Button", Toast.LENGTH_SHORT).show()
+                // Toast.makeText(context, "Nav Button", Toast.LENGTH_SHORT).show()
             }) {
                 Icon(
                     Icons.Filled.ArrowBack,
                     contentDescription = "Go back",
                 )
             }
+        })
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ContactsScaffold(topbarTitle : String,
+                     contactList: ArrayList<Contact>,
+                     context: Context = LocalContext.current) {
+    Scaffold(
+        topBar = {
+            PLTopAppBar(title = topbarTitle)
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                containerColor = BluePrimary,
+                onClick = { context.startActivity(Intent(context, CreateContactActivity::class.java)) },
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Filled.Add,"")
+            }
+        },
+        content = {
+            Column {
+                GetContacts(contactList)
+            }
         }
     )
 }
 
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Messages1() {
-    // This is to check if the messagesList has data or not
+fun GetContacts(contactList : ArrayList<Contact>) {
+    // This is to check if the contact has data or not
     // Initially it is false
     var listPrepared by remember {
         mutableStateOf(false)
@@ -145,8 +119,8 @@ fun Messages1() {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            items(messagesList) { itemObject ->
-                MessagesItemStyle(item = itemObject)
+            items(contactList) { itemObject ->
+                ContactsItemStyle(item = itemObject)
             }
         }
     }
@@ -160,20 +134,15 @@ fun Messages1() {
 }
 
 @Composable
-fun MessagesItemStyle(
-    item: Conversation,
+fun ContactsItemStyle(
+    item: Contact,
     context: Context = LocalContext.current
 ) {
     Box(
         modifier = Modifier
             .clickable(
                 onClick = {
-                    val i = Intent(context , MessageThreadV2::class.java)
-                    i.putExtra("senderID", item.senderID)
-                    i.putExtra("recipientID", item.recipientID)
-                    i.putExtra("recipientName", item.recipientName)
-                    startActivity(context, i, null)
-
+                    context.startActivity(Intent(context, MessageThreadV2::class.java))
                 }
             )
     ) {
@@ -183,66 +152,39 @@ fun MessagesItemStyle(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            // Profile image
+            // Contact image
+            // TODO: Update this to a dynamically generated image
             Image(
                 modifier = Modifier
                     .clip(shape = CircleShape)
                     .size(56.dp),
                 painter = painterResource(id = R.mipmap.powerline),
-                contentDescription = item.senderName
+                contentDescription = "ABC"
             )
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 12.dp)
             ) {
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-
-                    // Text that shows the name
+                    // Text that shows the  contact name
                     Text(
-                        text = item.senderName,
+                        text = item.contactName,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = TextStyle(
-                            //fontFamily = FontFamily(Font(R.font.roboto_medium, FontWeight.Medium)),
                             fontSize = 18.sp,
                             color = Color.Black
                         )
                     )
-
-                    // Text that shows the time
-                    Text(
-                        text = item.timestamp,
-                        style = TextStyle(
-                            //fontFamily = FontFamily(Font(R.font.roboto_regular, FontWeight.Normal)),
-                            fontSize = 14.sp,
-                            color = Color.Black
-                        )
-                    )
-
                 }
-                // Text that shows the message
-                Text(
-                    modifier = Modifier
-                        .padding(top = 2.dp),
-                    text = item.body,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = TextStyle(
-                    //    fontFamily = FontFamily(Font(R.font.roboto_regular, FontWeight.Normal)),
-                        fontSize = 16.sp,
-                        color = Color.Black
-                    )
-                )
-
             }
         }
     }
 }
+
+
