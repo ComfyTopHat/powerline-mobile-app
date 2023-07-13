@@ -47,11 +47,6 @@
             android:label="@string/title_activity_create_contact"
             android:theme="@style/Theme.Powerline" />
         <activity
-            android:name=".MainActivity"
-            android:exported="false"
-            android:label="@string/title_activity_login"
-            android:theme="@style/Theme.Powerline" />
-        <activity
             android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>

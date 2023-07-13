@@ -1,22 +1,17 @@
 package com.comfy.powerline;
 
 import static android.content.ContentValues.TAG;
-import static com.comfy.powerline.MainActivity.baseUrl;
-
 import static java.time.temporal.ChronoUnit.DAYS;
 
 import android.os.Build;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.comfy.powerline.data.Contact;
 import com.comfy.powerline.data.Conversation;
 import com.comfy.powerline.data.Message;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
@@ -42,6 +37,7 @@ public class ApiHandler extends AppCompatActivity  {
     ArrayList<Conversation> conversationDataList;
     volatile String strResponse;
     String fcmToken;
+    String baseUrl = LoginActivity.getBaseURL();
     List<Message> messageResponse;
     String version;
     ArrayList<Contact> getContacts(String jwt) throws InterruptedException {

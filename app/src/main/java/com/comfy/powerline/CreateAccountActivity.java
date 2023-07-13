@@ -43,7 +43,7 @@ public class CreateAccountActivity extends AppCompatActivity {
     }
 
     public void onBack(View v) {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, MessagesMenuV2.class);
         startActivity(intent);
     }
 
@@ -91,7 +91,7 @@ public class CreateAccountActivity extends AppCompatActivity {
                 .setTitle("Account Created")
                 .setMessage("Please note account details: \nUsername: " + username + "\nEmail: " + email + "\nPassword: ******" + passLastDigs)
                 .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                    Intent intent = new Intent(CreateAccountActivity.this, MainActivity.class);
+                    Intent intent = new Intent(CreateAccountActivity.this, LoginActivity.class);
                     startActivity(intent);
                 })
                 .setIcon(android.R.drawable.ic_dialog_info)

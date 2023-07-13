@@ -173,7 +173,6 @@ fun MessagesItemStyle(
                     i.putExtra("recipientID", item.recipientID)
                     i.putExtra("recipientName", item.recipientName)
                     startActivity(context, i, null)
-
                 }
             )
     ) {
