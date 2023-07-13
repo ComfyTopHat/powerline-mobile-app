@@ -16,6 +16,11 @@
         android:theme="@style/Theme.Powerline"
         tools:targetApi="29">
         <activity
+            android:name=".ContactsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_contacts"
+            android:theme="@style/Theme.Powerline" />
+        <activity
             android:name=".MessagesMenuV2"
             android:exported="false"
             android:label="@string/title_activity_messages_menu_v2"
@@ -33,17 +38,21 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
         <activity
             android:name=".CreateAccountActivity"
             android:exported="false" />
         <activity
-            android:name=".MainMenu"
+            android:name=".CreateContactActivity"
             android:exported="false"
-            android:label="@string/title_activity_main_menu"
-            android:theme="@style/Theme.Powerline.NoActionBar" />
+            android:label="@string/title_activity_create_contact"
+            android:theme="@style/Theme.Powerline" />
         <activity
             android:name=".MainActivity"
+            android:exported="false"
+            android:label="@string/title_activity_login"
+            android:theme="@style/Theme.Powerline" />
+        <activity
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

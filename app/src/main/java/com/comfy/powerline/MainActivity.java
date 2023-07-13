@@ -1,9 +1,7 @@
 package com.comfy.powerline;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.Editable;
@@ -16,15 +14,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.datastore.preferences.core.MutablePreferences;
-import androidx.datastore.preferences.core.Preferences;
-import androidx.datastore.preferences.core.PreferencesKeys;
-import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder;
-import androidx.datastore.rxjava3.RxDataStore;
-
-import com.comfy.powerline.data.SharedPreferencesHelper;
-import com.comfy.powerline.utils.AppToolBox;
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,27 +22,20 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Objects;
 
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
-
 
 public class MainActivity extends AppCompatActivity {
 ApiHandler api = new ApiHandler();
 static String baseUrl = "https://powerline-app.com/";
-int clientID = 0;
 private static final int NOTIFICATION_PERMISSION_CODE = 100;
 String version = "";
-String token = "";
-RxDataStore<Preferences> dataStoreRX;
+private String token = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        dataStoreRX = new RxPreferenceDataStoreBuilder(this,"auth").build(); //onCreate
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         try {
             getPowerlineVer();
-
             checkPermission(NOTIFICATION_PERMISSION_CODE);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -73,7 +55,6 @@ RxDataStore<Preferences> dataStoreRX;
                 String response = api.sendData(con, payload);
                 JSONObject result = new JSONObject(response);
                 token = ((String) result.get("token"));
-                clientID = (int) result.get("clientID");
                 con.disconnect();
             } catch (IOException | InterruptedException | JSONException e) {
                 TextView tv = findViewById(R.id.invalidInput);
@@ -94,21 +75,10 @@ RxDataStore<Preferences> dataStoreRX;
 
     private void openSuccessfulLogin() {
         saveFCMToken();
-        AppToolBox ap = new AppToolBox();
-        //ap.saveJWTToPreferencesStore("ABC");
         Intent intent = new Intent(MainActivity.this, MessagesMenuV2.class);
         startActivity(intent);
         finish();
     }
-
-
-
-    @SuppressLint("CommitPrefEdits")
-    protected void addToSharedPreferences(String name, String value) {
-        SharedPreferencesHelper sph = new SharedPreferencesHelper(this);
-        sph.SavePreferences(name, value);
-    }
-
 
     public void getToken(View v) throws InterruptedException {
         try {
@@ -125,8 +95,6 @@ RxDataStore<Preferences> dataStoreRX;
         run.start();
         run.join();
         if (!Objects.equals(token, "Invalid login")){
-            addToSharedPreferences("jwt","Bearer " + token);
-            addToSharedPreferences("clientID", String.valueOf(clientID));
             openSuccessfulLogin();
         }
         else {

@@ -88,6 +88,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.comfy.powerline.data.Message
 import com.comfy.powerline.ui.theme.BluePrimary
+import com.comfy.powerline.utils.AppToolBox
 
 enum class InputSelector {
     NONE,
@@ -98,17 +99,21 @@ enum class InputSelector {
 }
 
 class MessageThreadV2 : AppCompatActivity() {
-    val jwt =
-        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODkxMzI1NDgsImlhdCI6MTY4ODUyNzc0OCwic3ViIjoiQ29tZnkiLCJ1aWQiOjF9.g38E3_16ZxRAfMEcUJzhwnsrsFb3sQp-A7Tmti1DnEM"
     val api = ApiHandler()
-
-    private val _messages: MutableList<Message> = api.getThreadMessages("2", jwt).toMutableStateList()
-    
+    var jwt = ""
+    var _messages = mutableStateListOf <Message>()
+    var senderID:Int = 0
+    var recipientID:Int = 0
+    var recipientName:String = ""
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setValues()
+        val appToolBox = AppToolBox(applicationContext)
+        jwt = appToolBox.retrieveJWT()
+        _messages = api.getThreadMessages(recipientID.toString(), jwt).toMutableStateList()
         setContent {
             Scaffold(topBar = {
                 TopAppBar(colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = BluePrimary),
@@ -366,14 +371,10 @@ class MessageThreadV2 : AppCompatActivity() {
                     onSelectorChange = { currentInputSelector = it },
                     sendMessageEnabled = textState.text.isNotBlank(),
                     onMessageSent = {
-                        // TODO: Update this to dynamic values
-                        api.sendMessage(jwt, "2", textState.text)
-                        // TODO: Update this to dynamic values
-                        val newMessage = Message("", 1, 2, textState.text, "", null, true)
+                        api.sendMessage(jwt, senderID.toString(), textState.text)
+                        val newMessage = Message(recipientName, recipientID, senderID, textState.text, "", null, true)
                         _messages.add(newMessage)
-                        // Reset text field and close keyboard
                         textState = TextFieldValue()
-                        // Move scroll to bottom
                         dismissKeyboard()
                     },
                     currentInputSelector = currentInputSelector
@@ -542,5 +543,11 @@ class MessageThreadV2 : AppCompatActivity() {
                 contentDescription = description
             )
         }
+    }
+
+    fun setValues() {
+        senderID = intent.getIntExtra("senderID", 0)
+        recipientID = intent.getIntExtra("senderID", 0)
+        recipientName = intent.getStringExtra("recipientName").toString()
     }
 }
