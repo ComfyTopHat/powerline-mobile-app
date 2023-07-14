@@ -64,6 +64,7 @@ class MessagesMenuV2 : ComponentActivity() {
         val api = ApiHandler()
         val appToolBox = AppToolBox(applicationContext)
         val token = appToolBox.retrieveJWT()
+        appToolBox.saveFCMTokenToDB(token)
         messagesList = api.getLatestMessageThreads(token)
         setContent {
             MessagesScaffold()
