@@ -1,10 +1,8 @@
 package com.comfy.powerline;
 
-import static android.content.ContentValues.TAG;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.comfy.powerline.data.Contact;
 import com.comfy.powerline.data.Conversation;
 import com.comfy.powerline.data.Message;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,10 +33,17 @@ public class ApiHandler extends AppCompatActivity  {
     ArrayList<Contact> contactResponse;
     ArrayList<Conversation> conversationDataList;
     volatile String strResponse;
-    String fcmToken;
     String baseUrl = LoginActivity.getBaseURL();
     List<Message> messageResponse;
     String version;
+
+    /**
+     *
+     * @param jwt String JWT that contains a valid JWT in the format "Bearer _TOKEN_"
+     * @return Returns an ArrayList of Contact objects to be displayed via the compose form
+     * @throws InterruptedException
+     * NOTE: This will be replaced with a Kotlin coroutine at some stage
+     */
     ArrayList<Contact> getContacts(String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
@@ -62,6 +66,12 @@ public class ApiHandler extends AppCompatActivity  {
         return contactResponse;
     }
 
+    /**
+     * Method to convert a JSONArray to an ArrayList of Contact objects
+     * @param resultList Contains the JSONArray of Contacts received from the server
+     * @return Returns an ArrayList of Contact objects
+     * @throws JSONException If the JSON is malformed, likely if the API schema has changed
+     */
     ArrayList<Contact> convertJSONArrayToComposeContactList(JSONArray resultList) throws JSONException {
         ArrayList<Contact> contactList = new ArrayList<>();
         for (int i=0; i < resultList.length(); i++) {
@@ -75,25 +85,12 @@ public class ApiHandler extends AppCompatActivity  {
         return contactList;
     }
 
-    void saveFCMTokenToDB(String jwt) {
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        Log.w(TAG, "Fetching FCM registration token failed", task.getException());
-                        return;
-                    }
-                    try {
-                        fcmToken = task.getResult();
-                        String payload = ("{\"fcmToken\":\"" + fcmToken + "\"}");
-                        HttpURLConnection con = getPOSTHTTPConnection("fcm/", jwt);
-                        sendData(con, payload);
-                    }
-                    catch (Exception e) {
-
-                    }
-                });
-    }
-
+    /**
+     * Method to retreieve message threads to be display on the messages menu as unique conversations
+     * @param jwt String JWT that contains a valid JWT in the format "Bearer _TOKEN_"
+     * @return An ArrayList of Conversation objects to be displayed on the Compose form
+     * @throws InterruptedException
+     */
     @RequiresApi(api = Build.VERSION_CODES.O)
     ArrayList<Conversation> getLatestMessageThreads(String jwt) throws InterruptedException {
         Thread thread = new Thread(() -> {
@@ -115,6 +112,12 @@ public class ApiHandler extends AppCompatActivity  {
     }
 
 
+    /**
+     * A method to convert a JSON array to an ArrayList of Conversation Compose objects
+     * @param resultList A JSON Array of Conversations retrieved from the server
+     * @return Returns an ArrayList of Conversation objects converted from the JSON Array
+     * @throws JSONException
+     */
     ArrayList<Conversation> convertJSONArrayToComposeConversationList(JSONArray resultList) throws JSONException {
         ArrayList<Conversation> conversationList = new ArrayList<>();
         for (int i=0; i < resultList.length(); i++) {
@@ -133,14 +136,30 @@ public class ApiHandler extends AppCompatActivity  {
         return conversationList;
     }
 
-    public Boolean verifyClientExists(String client, String jwt) throws IOException, InterruptedException, JSONException {
+    /**
+     *
+     * @param client String value containing the username of the client
+     * @param jwt String value containing the JWT
+     * @return Returns an Int value of the client, if it does not exist return 0
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws JSONException
+     */
+    public int verifyClientExists(String client, String jwt) throws IOException, InterruptedException, JSONException {
         HttpURLConnection con = getPOSTHTTPConnection("clients/get/clientID/?username=" + (client), jwt);
-        String exists = sendData(con, "");
-        System.out.print(exists);
-        JSONObject responseObj = new JSONObject(exists);
-        return responseObj.getString("status").contains("success");
+        String response = sendData(con, "");
+        JSONObject responseObj = new JSONObject(response);
+        if (responseObj.getString("status").contains("success")) {
+            return (responseObj.getInt("clientID"));
+        }
+        else return 0;
     }
 
+    /**
+     * Basic method to convert a DateTime object to the required format
+     * @param messageDateTime A dateTime object to be formatted to the required standard
+     * @return Returns a String datetime in the updated format
+     */
     private static String formatTimeStamp(LocalDateTime messageDateTime) {
         String displayedTimestamp = "";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -168,6 +187,17 @@ public class ApiHandler extends AppCompatActivity  {
         return displayedTimestamp;
     }
 
+
+    /**
+     * Universal method to convert the response from the server to the required format.
+     * I.e. JSONArray/JSONObject/String
+     * @param con A HTTPConnection object with all the required parameters
+     * @param target The target class for the resposne format
+     * @return Returns a generic object cast to the target class
+     * @param <T> Contains the class target (must be generic as there are 3 possible options)
+     * @throws IOException
+     * @throws JSONException
+     */
     private <T> T readResponseObject(HttpURLConnection con, Class<T> target) throws IOException, JSONException {
         InputStream is = con.getInputStream();
         BufferedReader bR = new BufferedReader(new InputStreamReader(is));
@@ -186,6 +216,11 @@ public class ApiHandler extends AppCompatActivity  {
         }
     }
 
+    /**
+     *  Method to check the current API version and display it on the UI
+     *  This is currently unused since converting to Kotlin but will be reworked
+     * @throws InterruptedException
+     */
     protected void setVersion() throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {
@@ -210,6 +245,13 @@ public class ApiHandler extends AppCompatActivity  {
         thread.join();
     }
 
+    /**
+     * Method to retrieve a HTTP connection based on the function
+     * @param func The required API function to be called by the connection
+     * @param jwt String JWT that contains a valid JWT in the format "Bearer _TOKEN_"
+     * @return Returns a HttpURLConnection with the required headers
+     * @throws IOException
+     */
     public HttpURLConnection getPOSTHTTPConnection(String func, String jwt) throws IOException {
         URL url = new URL(baseUrl + func);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -223,6 +265,13 @@ public class ApiHandler extends AppCompatActivity  {
         return con;
     }
 
+    /**
+     *
+     * @param con
+     * @param payload
+     * @return
+     * @throws InterruptedException
+     */
     public String sendData(HttpURLConnection con, String payload) throws InterruptedException {
         Thread thread = new Thread(() -> {
             try {

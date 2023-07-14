@@ -31,13 +31,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.comfy.powerline.ApiHandler
 import com.comfy.powerline.utils.AppToolBox
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateContactForm() {
-    var validClient by remember { mutableStateOf(false) }
+    var contactID by remember { mutableStateOf(0) }
+    var validClient by remember { mutableStateOf( false ) }
     val context = LocalContext.current
+    val api = ApiHandler()
+    val appToolBox = AppToolBox(context)
+    val token = appToolBox.retrieveJWT()
 
     Scaffold(
         topBar = { PLTopAppBar(title = "New Contact") }
@@ -67,10 +73,10 @@ fun CreateContactForm() {
                 )
                 Button(modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        val api = ApiHandler()
-                        val appToolBox = AppToolBox(context)
-                        val token = appToolBox.retrieveJWT()
-                        validClient = api.verifyClientExists(username, token)
+                        contactID = api.verifyClientExists(username, token)
+                        if (contactID != 0) {
+                            validClient = true
+                        }
                     }) {
                     Text(text = "Search")
                 }
@@ -93,7 +99,7 @@ fun CreateContactForm() {
                 label = { Text(text = "First Name") },
                 enabled = validClient,
                 value = firstName,
-                onValueChange = { displayName = it },
+                onValueChange = { firstName = it },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
@@ -104,14 +110,21 @@ fun CreateContactForm() {
                 label = { Text(text = "Last Name") },
                 value = lastName,
                 enabled = validClient,
-                onValueChange = { displayName = it },
+                onValueChange = { lastName = it },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             Spacer(modifier = Modifier.height(15.dp))
 
             Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
                 Button(
-                    onClick = {},
+                    onClick = {
+                        // TODO: Add a success/failure message
+                        runBlocking { // this: CoroutineScope
+                            launch { // launch a new coroutine and continue
+                                appToolBox.addContact(contactID.toString(), displayName, firstName, lastName)
+                            }
+                        }
+                              },
                     shape = RoundedCornerShape(50.dp),
                     enabled = validClient,
                     modifier = Modifier
